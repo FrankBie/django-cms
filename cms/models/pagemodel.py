@@ -85,7 +85,7 @@ class Page(MpttPublisher):
         app_label = 'cms'
     
     class PublisherMeta:
-        exclude_fields_append = ['moderator_state', 'placeholders']
+        exclude_fields_append = ['moderator_state',] # 'placeholders'
     
     def __unicode__(self):
         title = self.get_menu_title(fallback=True)
