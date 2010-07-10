@@ -23,6 +23,12 @@ def applications_page_check(request, current_page=None, path=None):
     for resolver in APP_RESOLVERS:
         try:
             page_id = resolver.resolve_page_id(path+"/")
+            # frontend admin in edit mode
+            if not settings.CMS_MODERATOR or \
+                (request and (('preview' in request.GET and 
+                    'draft' in request.GET) or ('edit' in request.GET or request.session.get('cms_edit', False))) and request.user.is_staff):
+                from cms.models.pagemodel import Page
+                page_id = Page.objects.get(id=page_id).publisher_draft.id
             # yes, it is application page
             page = get_page_queryset(request).get(id=page_id)
             # If current page was matched, then we have some override for content
@@ -146,6 +152,9 @@ def get_app_patterns():
     # so, if CMS_MODERATOR, use, public() queryset, otherwise 
     # use draft(). This can be done, because url patterns are used just 
     # in frontend
+    
+    # That is not valid for the frontend admin! Now we are getting the right page_id 
+    # depending on the edit status within 'applications_page_check()'
     is_draft = not settings.CMS_MODERATOR
     try:
         home = Page.objects.get_home()
