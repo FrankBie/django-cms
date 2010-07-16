@@ -69,7 +69,7 @@ MIDDLEWARE_CLASSES = (
     
 )
 
-ROOT_URLCONF = 'example.urls'
+ROOT_URLCONF = 'testapp.urls'
 
 
 TEMPLATE_DIRS = (
@@ -97,7 +97,7 @@ INSTALLED_APPS = (
     'cms.plugins.twitter',
     'cms.plugins.inherit',
     'mptt',
-    'example.sampleapp',
+    'testapp.sampleapp',
     'south',
 )
 
@@ -165,3 +165,14 @@ try:
     from local_settings import *
 except ImportError:
     pass
+
+# set xmlrunner as test runner if available
+try:
+    import xmlrunner
+except ImportError:
+    xmlrunner = None
+    
+if xmlrunner:
+    TEST_RUNNER = 'testapp.testrunner.DjangoXMLTestRunner'
+else:
+    TEST_RUNNER = 'django.test.simple.DjangoTestSuiteRunner'
