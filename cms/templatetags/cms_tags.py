@@ -187,7 +187,7 @@ class PlaceholderNode(template.Node):
             return ''
         
         content, placeholder = self.get_content(request, page, context)
-        if not content:
+        if content != '':
             if self.nodelist_or:
                 content = self.nodelist_or.render(context)
             return content
@@ -235,7 +235,7 @@ class PlaceholderNode(template.Node):
             content = render_placeholder(placeholder, context)
             if content:
                 return content, placeholder
-        return '', None
+        return '', placeholder
 
 register.tag('placeholder', do_placeholder)
 
