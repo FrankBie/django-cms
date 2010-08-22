@@ -187,7 +187,7 @@ class PlaceholderNode(template.Node):
             return ''
         
         content, placeholder = self.get_content(request, page, context)
-        if content != '':
+        if not content:
             if self.nodelist_or:
                 content = self.nodelist_or.render(context)
             return content
@@ -214,7 +214,9 @@ class PlaceholderNode(template.Node):
             placeholder = self._get_placeholder(current_page, page, context, self.name)
             if placeholder is None:
                 continue
-            if not get_plugins(request, placeholder):
+            # not rendering empty placeholders, just while in frontend admin edit-mode
+            if not get_plugins(request, placeholder) and \
+               not (('edit' in request.GET or request.session.get('cms_edit', False)) and request.user.is_staff):
                 continue
             if hasattr(request, 'placeholder_media'):
                 request.placeholder_media = reduce(operator.add, [request.placeholder_media, placeholder.get_media(request, context)])
@@ -222,7 +224,7 @@ class PlaceholderNode(template.Node):
             content = render_placeholder(placeholder, context)
             if content:
                 return content, placeholder
-        return '', placeholder
+        return '', None
 
 register.tag('placeholder', do_placeholder)
 
