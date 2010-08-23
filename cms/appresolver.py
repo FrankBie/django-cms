@@ -24,7 +24,7 @@ def applications_page_check(request, current_page=None, path=None):
         try:
             page_id = resolver.resolve_page_id(path+"/")
             # frontend admin in edit mode
-            if not settings.CMS_MODERATOR or \
+            if settings.CMS_MODERATOR and \
                 (request and (('preview' in request.GET and 
                     'draft' in request.GET) or ('edit' in request.GET or request.session.get('cms_edit', False))) and request.user.is_staff):
                 from cms.models.pagemodel import Page
