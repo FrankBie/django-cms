@@ -196,25 +196,6 @@ def has_global_change_permissions_permission(user):
 
 
 
-def mail_page_user_change(user, created=False, password=""):
-    """Send email notification to given user. Used it PageUser profile creation/
-    update.
-    """
-    from cms.utils.mail import send_mail
-    
-    if created:
-        subject = _('CMS - your user account was created.')
-    else:
-        subject = _('CMS - your user account was changed.')
-    
-    context = {
-        'user': user,
-        'password': password or "*" * 8,
-        'created': created,
-    }
-    send_mail(subject, 'admin/cms/mail/page_user_change.txt', [user.email], context, 'admin/cms/mail/page_user_change.html')
-
-
 def has_generic_permission(page_id, user, attr, site):
     """Permission getter for single page with given id.
     """    

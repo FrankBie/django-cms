@@ -4,8 +4,9 @@ from cms.models import Page, PagePermission, PageUser, ACCESS_PAGE, \
     PageUserGroup
 from cms.utils.page import is_valid_page_slug
 from cms.utils.permissions import get_current_user, get_subordinate_users, \
-    get_subordinate_groups, mail_page_user_change
+    get_subordinate_groups
 from cms.utils.urlutils import any_path_re
+from cms.utils.mail import mail_page_user_change
 from django import forms
 from django.conf import settings
 from django.contrib.auth.forms import UserCreationForm

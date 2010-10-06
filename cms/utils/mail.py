@@ -5,7 +5,8 @@ from cms.utils.urlutils import urljoin
 from django.contrib import admin
 
 def send_mail(subject, txt_template, to, context=None, html_template=None, fail_silently=True):
-    """Multipart message helper with template rendering.
+    """
+    Multipart message helper with template rendering.
     """
     site = Site.objects.get_current()
     
@@ -23,3 +24,23 @@ def send_mail(subject, txt_template, to, context=None, html_template=None, fail_
         body = render_to_string(html_template, context)
         message.attach_alternative(body, 'text/html')
     message.send(fail_silently=fail_silently)
+
+
+def mail_page_user_change(user, created=False, password=""):
+    """
+    Send email notification to given user. Used it PageUser profile creation/
+    update.
+    """
+    if created:
+        subject = _('CMS - your user account was created.')
+    else:
+        subject = _('CMS - your user account was changed.')
+
+    context = {
+        'user': user,
+        'password': password or "*" * 8,
+        'created': created,
+    }
+    send_mail(subject, 'admin/cms/mail/page_user_change.txt', [user.email], context, 'admin/cms/mail/page_user_change.html')
+
+
