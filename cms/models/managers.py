@@ -344,7 +344,7 @@ class PagePermissionsPermissionManager(models.Manager):
         """
         Give a list of pages which user can moderate.
         If moderation isn't installed, nobody can moderate.
-        """        
+        """
         if not settings.CMS_MODERATOR:
             return []
         return self.get_id_list(user, site, "can_moderate")
@@ -364,12 +364,11 @@ class PagePermissionsPermissionManager(models.Manager):
         #cached = get_permission_cache(user, attr)
         #if cached is not None:
         #    return cached
-        
-        from cms.models import GlobalPagePermission, PagePermission, MASK_PAGE,\
-            MASK_CHILDREN, MASK_DESCENDANTS
+        from cms.models import (GlobalPagePermission, PagePermission,
+                                MASK_PAGE, MASK_CHILDREN, MASK_DESCENDANTS)
         # check global permissions
-        in_global_permissions = GlobalPagePermission.objects.with_user(user).filter(**{attr: True, 'sites__in':[site]}).count()
-        if in_global_permissions:
+        in_global_permissions = GlobalPagePermission.objects.with_user(user).filter(**{attr: True, 'sites__in':[site]})
+        if in_global_permissions.exists():
             # user or his group are allowed to do `attr` action
             # !IMPORTANT: page permissions must not override global permissions 
             return PagePermissionsPermissionManager.GRANT_ALL

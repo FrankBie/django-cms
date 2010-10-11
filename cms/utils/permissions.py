@@ -71,23 +71,25 @@ def has_page_add_permission(request):
     return False
 
 def has_any_page_change_permissions(request):
-    from cms.utils.plugins import current_site  
-    permissions = PagePermission.objects.filter(page__site=current_site(request)).filter(Q(user=request.user)|Q(group__in=request.user.groups.all()))
-    if permissions.count()>0:
-        return True
-    return False
- 
+    from cms.utils.plugins import current_site
+    return PagePermission.objects.filter(
+            page__site=current_site(request)
+        ).filter(
+            Q(user=request.user) | \
+            Q(group__in=request.user.groups.all())
+        ).exists()
+
 def has_page_change_permission(request):
     """
     Return true if the current user has permission to change any page. This is
     just used for building the tree - only superuser, or user with can_change in
     globalpagepermission can change a page.
     """    
-    from cms.utils.plugins import current_site    
+    from cms.utils.plugins import current_site
     opts = Page._meta
     if request.user.is_superuser or \
         (request.user.has_perm(opts.app_label + '.' + opts.get_change_permission()) and
-            (GlobalPagePermission.objects.with_user(request.user).filter(can_change=True, sites__in=[current_site(request)]).count()>0) or 
+            (GlobalPagePermission.objects.with_user(request.user).filter(can_change=True, sites__in=[current_site(request)]).exists()) or
             has_any_page_change_permissions(request)):
         return True
     return False
