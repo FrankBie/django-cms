@@ -8,12 +8,6 @@ from cms.models.query import PageQuerySet
 from cms.utils.i18n import get_fallback_languages
 
 
-try:
-    set
-except NameError:
-    from sets import Set as set
-
-    
 class PageManager(PublisherManager):
     """Use draft() and public() methods for accessing the corresponding
     instances.
