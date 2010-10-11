@@ -1,61 +1,61 @@
-from cms.admin.change_list import CMSChangeList
-from cms.admin.dialog.views import get_copy_dialog
-from cms.admin.forms import PageForm, PageAddForm
-from cms.admin.permissionadmin import PAGE_ADMIN_INLINES, \
-    PagePermissionInlineAdmin
-from cms.admin.views import save_all_plugins, revert_plugins
-from cms.apphook_pool import apphook_pool
-from cms.exceptions import NoPermissionsException
-from cms.forms.widgets import PluginEditor
-from cms.models import Page, Title, CMSPlugin, PagePermission, \
-    PageModeratorState, EmptyTitle, GlobalPagePermission
-from cms.models.managers import PagePermissionsPermissionManager
-from cms.models.moderatormodels import MASK_PAGE, MASK_CHILDREN, \
-    MASK_DESCENDANTS
-from cms.models.placeholdermodel import Placeholder
-from cms.plugin_pool import plugin_pool
-from cms.utils import get_template_from_request, get_language_from_request
-from cms.utils.admin import render_admin_menu_item
-from cms.utils.moderator import update_moderation_message, \
-    get_test_moderation_level, moderator_should_approve, approve_page, \
-    will_require_moderation
-from cms.utils.permissions import has_page_add_permission, \
-    has_page_change_permission, get_user_permission_level, \
-    has_global_change_permissions_permission
-from cms.utils.placeholder import get_page_from_placeholder_if_exists
-from cms.utils.plugins import get_placeholders, get_page_from_plugin_or_404
+import os
 from copy import deepcopy
+
 from django import template
 from django.conf import settings
-from django.contrib import admin
-from django.contrib.admin.options import IncorrectLookupParameters
-from django.contrib.admin.util import unquote, get_deleted_objects
-from django.contrib.sites.models import Site
 from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
 from django.core.urlresolvers import reverse
 from django.db import transaction
 from django.forms import Widget, Textarea, CharField
-from django.http import HttpResponseRedirect, HttpResponse, Http404, \
-    HttpResponseBadRequest, HttpResponseForbidden, HttpResponseNotAllowed
+from django.http import (HttpResponseRedirect, HttpResponse, Http404,
+    HttpResponseBadRequest, HttpResponseForbidden, HttpResponseNotAllowed)
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template.context import RequestContext
 from django.template.defaultfilters import title, escape, force_escape, escapejs
 from django.utils.encoding import force_unicode
 from django.utils.translation import ugettext_lazy as _
-from menus.menu_pool import menu_pool
-import os
 
-model_admin = admin.ModelAdmin
-create_on_success = lambda x: x
+from django.contrib import admin
+from django.contrib.admin.options import IncorrectLookupParameters
+from django.contrib.admin.util import unquote, get_deleted_objects
+from django.contrib.sites.models import Site
+
+from cms.admin.change_list import CMSChangeList
+from cms.admin.dialog.views import get_copy_dialog
+from cms.admin.forms import PageForm, PageAddForm
+from cms.admin.permissionadmin import (PAGE_ADMIN_INLINES, PagePermissionInlineAdmin)
+from cms.admin.views import save_all_plugins, revert_plugins
+from cms.apphook_pool import apphook_pool
+from cms.exceptions import NoPermissionsException
+from cms.forms.widgets import PluginEditor
+from cms.models import (Page, Title, CMSPlugin, PagePermission,
+    PageModeratorState, EmptyTitle, GlobalPagePermission)
+from cms.models.managers import PagePermissionsPermissionManager
+from cms.models.moderatormodels import MASK_PAGE, MASK_CHILDREN, MASK_DESCENDANTS
+from cms.models.placeholdermodel import Placeholder
+from cms.plugin_pool import plugin_pool
+from cms.utils import get_template_from_request, get_language_from_request
+from cms.utils.admin import render_admin_menu_item
+from cms.utils.moderator import (update_moderation_message, approve_page,
+    get_test_moderation_level, moderator_should_approve, will_require_moderation)
+from cms.utils.permissions import (has_page_add_permission,
+    has_page_change_permission, get_user_permission_level,
+    has_global_change_permissions_permission)
+from cms.utils.placeholder import get_page_from_placeholder_if_exists
+from cms.utils.plugins import get_placeholders, get_page_from_plugin_or_404
+
+from menus.menu_pool import menu_pool
 
 if 'reversion' in settings.INSTALLED_APPS:
     import reversion
-    from reversion.admin import VersionAdmin
-    model_admin = VersionAdmin
-
+    from reversion.admin import VersionAdmin as ModelAdmin
     create_on_success = reversion.revision.create_on_success
+else:
+    from django.contrib.admin import ModelAdmin
+    create_on_success = lambda x: x
 
-class PageAdmin(model_admin):
+
+class PageAdmin(ModelAdmin):
     form = PageForm
     list_filter = ['published', 'in_navigation', 'template', 'changed_by']
     # TODO: add the new equivalent of 'cmsplugin__text__body' to search_fields'
@@ -1029,10 +1029,8 @@ class PageAdmin(model_admin):
         if page.has_change_permission(request):
             if page.in_navigation:
                 page.in_navigation = False
-                val = 0
             else:
                 page.in_navigation = True
-                val = 1
             page.save(force_state=Page.MODERATOR_NEED_APPROVEMENT)
             return render_admin_menu_item(request, page)
         return HttpResponseForbidden(_("You do not have permission to change this page's in_navigation status"))
