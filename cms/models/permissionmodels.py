@@ -76,7 +76,7 @@ class PagePermission(AbstractPagePermission):
     
     def __unicode__(self):
         page = self.page_id and unicode(self.page) or "None"
-        return "%s :: %s has: %s" % (page, self.audience, unicode(dict(ACCESS_CHOICES)[self.grant_on][1]))
+        return "%s :: %s has: %s" % (page, self.audience, unicode(dict(ACCESS_CHOICES)[self.grant_on]))
 
 
 class PageUser(User):
