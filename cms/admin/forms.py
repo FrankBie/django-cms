@@ -1,12 +1,3 @@
-from cms.apphook_pool import apphook_pool
-from cms.forms.widgets import UserSelectAdminWidget
-from cms.models import Page, PagePermission, PageUser, ACCESS_PAGE, \
-    PageUserGroup
-from cms.utils.page import is_valid_page_slug
-from cms.utils.permissions import get_current_user, get_subordinate_users, \
-    get_subordinate_groups
-from cms.utils.urlutils import any_path_re
-from cms.utils.mail import mail_page_user_change
 from django import forms
 from django.conf import settings
 from django.contrib.auth.forms import UserCreationForm
@@ -19,9 +10,18 @@ from django.forms.util import ErrorList
 from django.forms.widgets import HiddenInput
 from django.template.defaultfilters import slugify
 from django.utils.translation import ugettext_lazy as _, get_language
+
+from cms.apphook_pool import apphook_pool
+from cms.forms.widgets import UserSelectAdminWidget
+from cms.models import Page, PagePermission, PageUser, ACCESS_PAGE, \
+    PageUserGroup
+from cms.utils.page import is_valid_page_slug
+from cms.utils.permissions import get_current_user, get_subordinate_users, \
+    get_subordinate_groups
+from cms.utils.urlutils import any_path_re
+from cms.utils.mail import mail_page_user_change
+
 from menus.menu_pool import menu_pool
-
-
 
 
 class PageAddForm(forms.ModelForm):
@@ -143,7 +143,8 @@ class PageForm(PageAddForm):
     
 
 class PagePermissionInlineAdminForm(forms.ModelForm):
-    """Page permission inline admin form used in inline admin. Required, because
+    """
+    Page permission inline admin form used in inline admin. Required, because
     user and group queryset must be changed. User can see only users on the same
     level or under him in choosen page tree, and users which were created by him, 
     but aren't assigned to higher page level than current user.
@@ -152,21 +153,13 @@ class PagePermissionInlineAdminForm(forms.ModelForm):
     user = forms.ModelChoiceField('user', label=_('user'), widget=UserSelectAdminWidget, required=False)
     page = forms.ModelChoiceField(Page, label=_('user'), widget=HiddenInput(), required=True)
     
-    def __init__(self, data=None, files=None, auto_id='id_%s', prefix=None,
-                 initial=None, error_class=ErrorList, label_suffix=':',
-                 empty_permitted=False, instance=None):
-        
-        super(PagePermissionInlineAdminForm, self).__init__(data, files,
-            auto_id, prefix, initial, error_class, label_suffix, empty_permitted,
-            instance)
-        
+    def __init__(self, *args, **kwargs):
+        super(PagePermissionInlineAdminForm, self).__init__(*args, **kwargs)
         user = get_current_user() # current user from threadlocals
-        
         self.fields['user'].queryset = get_subordinate_users(user)
         self.fields['user'].widget.user = user # assign current user
         self.fields['group'].queryset = get_subordinate_groups(user)
-        
-        
+    
     def clean(self):
         super(PagePermissionInlineAdminForm, self).clean()
         for field in self.Meta.model._meta.fields:
@@ -182,7 +175,9 @@ class PagePermissionInlineAdminForm(forms.ModelForm):
             # this is a missconfiguration - user can add/move page to current
             # page but after he does this, he will not have permissions to 
             # access this page anymore, so avoid this
-            raise forms.ValidationError(_('Add page permission requires also access to children, or descendants, otherwise added page can\'t be changed by its creator.'))
+            raise forms.ValidationError(_("Add page permission requires also "
+                "access to children, or descendants, otherwise added page "
+                "can't be changed by its creator."))
         
         if can_add and not can_edit:
             raise forms.ValidationError(_('Add page permission also requires edit page permission.'))
@@ -209,6 +204,7 @@ class PagePermissionInlineAdminForm(forms.ModelForm):
     
 
 class GlobalPagePermissionAdminForm(forms.ModelForm):
+
     def clean(self):
         super(GlobalPagePermissionAdminForm, self).clean()
         if not self.cleaned_data['user'] and not self.cleaned_data['group']:
@@ -224,8 +220,8 @@ class GenericCmsPermissionForm(forms.ModelForm):
     can_delete_page = forms.BooleanField(label=_('Delete'), required=False)
     can_recover_page = forms.BooleanField(label=_('Recover (any) pages'), required=False)
     
-    # pageuser is for pageuser & group - they are combined together, and readed out
-    # from PageUser model
+    # pageuser is for pageuser & group - they are combined together,
+    # and read out from PageUser model
     can_add_pageuser = forms.BooleanField(label=_('Add'), required=False)
     can_change_pageuser = forms.BooleanField(label=_('Change'), required=False)
     can_delete_pageuser = forms.BooleanField(label=_('Delete'), required=False)
@@ -238,47 +234,41 @@ class GenericCmsPermissionForm(forms.ModelForm):
         """Read out permissions from permission system.
         """
         initials = {}
-        models = (Page, PageUser, PagePermission)
-        """
-        for model in models:
-            name = model.__name__.lower()
-            for t in ('add', 'change', 'delete'):
-                codename = getattr(model._meta, 'get_%s_permission' % t)()
-                initials['can_%s_%s' % (t, name)] = obj.has_perm('%s.%s' % (model._meta.app_label, codename)) 
-        return initials
-        """
         permission_acessor = self.permission_acessor(obj)
-        for model in models:
+        for model in (Page, PageUser, PagePermission):
             name = model.__name__.lower()
             content_type = ContentType.objects.get_for_model(model)
             permissions = permission_acessor.filter(content_type=content_type).values_list('codename', flat=True)
             for t in ('add', 'change', 'delete'):
                 codename = getattr(model._meta, 'get_%s_permission' % t)()
-                initials['can_%s_%s' % (t, name)] = codename in permissions 
+                initials['can_%s_%s' % (t, name)] = codename in permissions
         return initials
     
     def permission_acessor(self, obj):
         if isinstance(obj, PageUser):
-            rel_name = 'user_permissions' 
+            rel_name = 'user_permissions'
         else:
             rel_name = 'permissions'
         return getattr(obj, rel_name)
-
+    
     def save_permissions(self, obj):
-        models = ((Page, 'page'), (PageUser, 'pageuser'), (PageUserGroup, 'pageuser'), (PagePermission, 'pagepermission'))
-        
+        models = (
+            (Page, 'page'),
+            (PageUser, 'pageuser'),
+            (PageUserGroup, 'pageuser'),
+            (PagePermission, 'pagepermission')
+        )
         if not obj.pk:
             # save obj, otherwise we can't assign permissions to him
             obj.save()
         permission_acessor = self.permission_acessor(obj)
-        
         for model, name in models:
             content_type = ContentType.objects.get_for_model(model)
-            for t in ('add', 'change', 'delete'):
+            for method in ('add', 'change', 'delete'):
                 # add permission `t` to model `model`
-                codename = getattr(model._meta, 'get_%s_permission' % t)()
+                codename = getattr(model._meta, 'get_%s_permission' % method)()
                 permission = Permission.objects.get(content_type=content_type, codename=codename)
-                if self.cleaned_data.get('can_%s_%s' % (t, name), None):
+                if self.cleaned_data.get('can_%s_%s' % (method, name), None):
                     permission_acessor.add(permission)
                 else:
                     permission_acessor.remove(permission)
@@ -322,7 +312,7 @@ class PageUserForm(UserCreationForm, GenericCmsPermissionForm):
             self._password_change = False
             return u''
         return super(PageUserForm, self).clean_password2()
-
+    
     def clean(self):
         cleaned_data = super(PageUserForm, self).clean()
         notify_user = self.cleaned_data['notify_user']
@@ -335,7 +325,7 @@ class PageUserForm(UserCreationForm, GenericCmsPermissionForm):
         if self.cleaned_data['can_add_pagepermission'] and not self.cleaned_data['can_change_pagepermission']:
             raise forms.ValidationError(_("To add permissions you also need to edit them!"))
         return cleaned_data
-
+    
     def save(self, commit=True):
         """Create user, assign him to staff users, and create permissions for 
         him if required. Also assigns creator to user.
@@ -351,12 +341,9 @@ class PageUserForm(UserCreationForm, GenericCmsPermissionForm):
             user.created_by = get_current_user()
         if commit:
             user.save()
-
         self.save_permissions(user)
-
         if self.cleaned_data['notify_user']:
             mail_page_user_change(user, created, self.cleaned_data['password1'])
-        
         return user
     
     

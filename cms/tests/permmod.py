@@ -47,12 +47,13 @@ class PermissionModeratorTestCase(CMSTestCase):
     # set of heler functions
     
     def create_page_user(self, username, password=None, 
-        can_add_page=True, can_change_page=True, can_delete_page=True, 
-        can_recover_page=True, can_add_pageuser=True, can_change_pageuser=True, 
-        can_delete_pageuser=True, can_add_pagepermission=True, 
+        can_add_page=True, can_change_page=True, can_delete_page=True,
+        can_recover_page=True, can_add_pageuser=True, can_change_pageuser=True,
+        can_delete_pageuser=True, can_add_pagepermission=True,
         can_change_pagepermission=True, can_delete_pagepermission=True,
         grant_all=False):
-        """Helper function for creating page user, through form on:
+        """
+        Helper function for creating page user, through form on:
             /admin/cms/pageuser/add/
             
         Returns created user.

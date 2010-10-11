@@ -270,7 +270,7 @@ class PagePermissionManager(BasicPagePermissionManager):
             
             User permissions can be assigned to multiple page nodes, so merge of 
             all of them is required. In this case user can see permissions for 
-            users C,X,D,Y,I,J but not A, because A user in higher in hierarchy.            
+            users C,X,D,Y,I,J but not A, because A user in higher in hierarchy.
         
         If permission object holds group, this permission object can be visible 
         to user only if all of the group members are lover in hierarchy. If any 
@@ -344,7 +344,6 @@ class PagePermissionsPermissionManager(models.Manager):
         """
         return self.__get_id_list(user, site, "can_publish")
     
-    
     def get_change_id_list(self, user, site):
         """
         Give a list of page where the user has edit rights or the string "All" if
@@ -393,32 +392,9 @@ class PagePermissionsPermissionManager(models.Manager):
             return []
         return self.__get_id_list(user, site, "can_moderate")
     
-    '''
-    def get_change_list_id_list(self, user, site):
-        """This is used just in admin now. Gives all ids where user haves can_edit
-        and can_add merged together.
-        
-        There is for sure a better way how to do this over sql, need to be 
-        optimized...
-        """
-        can_change = self.get_change_id_list(user)
-        can_add = self.get_add_id_list(user)
-        if can_change is can_add:
-            # GRANT_ALL case
-            page_id_list = can_change
-        else:
-            permission_set = filter(lambda i: not i is PagePermissionsPermissionManager.GRANT_ALL, [can_change, can_add])   
-            if len(permission_set) is 1:
-                page_id_list = permission_set[0]
-            else:
-                page_id_list = list(set(can_change).union(set(can_add)))
-        return page_id_list
-    '''    
-    
     def __get_id_list(self, user, site, attr):
         # TODO: result of this method should be cached per user, and cache should
         # be cleaned after some change in permissions / globalpermission
-        
         if not user.is_authenticated() or not user.is_staff:
             return []
         
@@ -444,7 +420,7 @@ class PagePermissionsPermissionManager(models.Manager):
         # his group/s
         qs = PagePermission.objects.with_user(user)
         qs.order_by('page__tree_id', 'page__level', 'page__lft')
-        # default is denny...
+        # default is deny...
         page_id_allow_list = []
         for permission in qs:
             is_allowed = getattr(permission, attr)

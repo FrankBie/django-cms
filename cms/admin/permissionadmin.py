@@ -1,14 +1,15 @@
+from copy import deepcopy
 from django.conf import settings
-from cms.admin.forms import GlobalPagePermissionAdminForm, \
-    PagePermissionInlineAdminForm
+from django.template.defaultfilters import title
+from django.utils.translation import ugettext as _
+
+from django.contrib import admin
+
+from cms.admin.forms import GlobalPagePermissionAdminForm, PagePermissionInlineAdminForm
 from cms.admin.models import BaseInlineFormSetWithQuerySet
 from cms.exceptions import NoPermissionsException
 from cms.models import Page, PagePermission, GlobalPagePermission, PageUser
 from cms.utils.permissions import get_user_permission_level
-from copy import deepcopy
-from django.contrib import admin
-from django.template.defaultfilters import title
-from django.utils.translation import ugettext as _
 
 PAGE_ADMIN_INLINES = []
 
@@ -22,10 +23,7 @@ class PagePermissionInlineAdmin(admin.TabularInline):
     form = PagePermissionInlineAdminForm
     # use special formset, so we can use queryset defined here
     formset = BaseInlineFormSetWithQuerySet
-    classes = ['collapse', 'collapsed'] 
-    
-    def __init__(self, *args, **kwargs):
-        super(PagePermissionInlineAdmin, self).__init__(*args, **kwargs)
+    classes = ['collapse', 'collapsed']
     
     def queryset(self, request):
         """Queryset change, so user with global change permissions can see
@@ -34,8 +32,7 @@ class PagePermissionInlineAdmin(admin.TabularInline):
         this will lead to violation, when he can add more power to itself)
         """
         # can see only permissions for users which are under him in tree
-        qs = PagePermission.objects.subordinate_to_user(request.user)
-        return qs
+        return PagePermission.objects.subordinate_to_user(request.user)
     
     def get_fieldsets(self, request, obj=None):
         """Request formset with given obj.
@@ -90,22 +87,22 @@ class GlobalPagePermissionAdmin(admin.ModelAdmin):
     
     list_display.append('can_change_advanced_settings')
     list_filter.append('can_change_advanced_settings')
-        
+    
     if settings.CMS_MODERATOR:
         list_display.append('can_moderate')
         list_filter.append('can_moderate')
     else:
         exclude.append('can_moderate')
 
-if settings.CMS_PERMISSION:    
+if settings.CMS_PERMISSION:
     admin.site.register(GlobalPagePermission, GlobalPagePermissionAdmin)
 
 
 class GenericCmsPermissionAdmin(object):
     def update_permission_fieldsets(self, request, obj=None):
-        """Nobody can grant more than he haves, so check for user 
-        permissions to Page and User model and render fieldset depending on
-        them.
+        """
+        Nobody can grant more than he haves, so check for user permissions
+        to Page and User model and render fieldset depending on them.
         """
         fieldsets = deepcopy(self.fieldsets)
         
@@ -127,7 +124,7 @@ class GenericCmsPermissionAdmin(object):
                 fieldsets.insert(2 + i, (title, {'fields': (fields,)}))
             i += 1
         return fieldsets
-            
+    
     def _has_change_permissions_permission(self, request):
         """User is able to add/change objects only if he haves can change
         permission on some page.
@@ -141,8 +138,7 @@ class GenericCmsPermissionAdmin(object):
     def has_add_permission(self, request):
         return self._has_change_permissions_permission(request) and \
             super(self.__class__, self).has_add_permission(request)
-
+    
     def has_change_permission(self, request, obj=None):
         return self._has_change_permissions_permission(request) and \
             super(self.__class__, self).has_change_permission(request, obj)
-

@@ -133,8 +133,6 @@ class PageAdmin(model_admin):
             'fields': advanced_fields,
             'classes': ('collapse',),
         }),
-
-
     ]
 
     if settings.CMS_SEO_FIELDS:
@@ -559,7 +557,6 @@ class PageAdmin(model_admin):
                 not settings.CMS_DBGETTEXT,
         })
         return context
-
 
     def response_change(self, request, obj):
         """Called always when page gets changed, call save on page, there may be

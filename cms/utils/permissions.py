@@ -78,7 +78,8 @@ def has_any_page_change_permissions(request):
     return False
  
 def has_page_change_permission(request):
-    """Return true if the current user has permission to change any page. This is
+    """
+    Return true if the current user has permission to change any page. This is
     just used for building the tree - only superuser, or user with can_change in
     globalpagepermission can change a page.
     """    
@@ -93,7 +94,8 @@ def has_page_change_permission(request):
 
 
 def get_user_permission_level(user):
-    """Returns highest user level from the page/permission hierarchy on which
+    """
+    Returns highest user level from the page/permission hierarchy on which
     user haves can_change_permission. Also takes look into user groups. Higher 
     level equals to lover number. Users on top of hierarchy have level 0. Level 
     is the same like page.level attribute.
