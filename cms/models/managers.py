@@ -2,6 +2,7 @@ from django.conf import settings
 from django.db import models
 from django.contrib.sites.models import Site
 from django.db.models import Q
+
 from cms.exceptions import NoPermissionsException
 from publisher import PublisherManager
 from cms.models.query import PageQuerySet
@@ -321,79 +322,41 @@ class PagePermissionManager(BasicPagePermissionManager):
 class PagePermissionsPermissionManager(models.Manager):
     """Page permissions permission manager.
     
-    !IMPORTANT: this actually points to Page model, not to PagePermission. Seems 
-    this will be better approach. Accessible under permissions.
+    !IMPORTANT: this actually points to Page model, not to PagePermission.
+    Seems this will be better approach. Accessible under permissions.
     
     Maybe this even shouldn't be a manager - it mixes different models together.
     """
-    
     # we will return this in case we have a superuser, or permissions are not
     # enabled/configured in settings
     GRANT_ALL = 'All'
     
-    def get_publish_id_list(self, user, site):
+    def __getattr__(self, name):
         """
-        Give a list of page where the user has publish rights or the string "All" if
-        the user has all rights.
+        Helper to automatically dispatch get_X_id_list calls to the
+        appropriate backend function.
         """
-        return self.__get_id_list(user, site, "can_publish")
-    
-    def get_change_id_list(self, user, site):
-        """
-        Give a list of page where the user has edit rights or the string "All" if
-        the user has all rights.
-        """
-        return self.__get_id_list(user, site, "can_change")
-    
-    
-    def get_add_id_list(self, user, site):
-        """
-        Give a list of page where the user has add page rights or the string 
-        "All" if the user has all rights.
-        """
-        return self.__get_id_list(user, site, "can_add")
-    
-    def get_delete_id_list(self, user, site):
-        """
-        Give a list of page where the user has delete rights or the string "All" if
-        the user has all rights.
-        """
-        return self.__get_id_list(user, site, "can_delete")
-    
-    def get_advanced_settings_id_list(self, user, site):
-        """
-        Give a list of page where the user can change advanced settings or the 
-        string "All" if the user has all rights.
-        """
-        return self.__get_id_list(user, site, "can_change_advanced_settings")
-    
-    def get_change_permissions_id_list(self, user, site):
-        """Give a list of page where the user can change permissions.
-        """
-        return self.__get_id_list(user, site, "can_change_permissions")
-    
-    def get_move_page_id_list(self, user, site):
-        """Give a list of pages which user can move.
-        """
-        return self.__get_id_list(user, site, "can_move_page")
-    
+        if name.startswith("get_") and name.endswith("_id_list"):
+            return lambda user, site: self.get_id_list(user, site, "can_%s" % name[4:-8])
+        raise AttributeError(name)
     
     def get_moderate_id_list(self, user, site):
-        """Give a list of pages which user can moderate. If moderation isn't 
-        installed, nobody can moderate. 
+        """
+        Give a list of pages which user can moderate.
+        If moderation isn't installed, nobody can moderate.
         """        
         if not settings.CMS_MODERATOR:
             return []
-        return self.__get_id_list(user, site, "can_moderate")
+        return self.get_id_list(user, site, "can_moderate")
     
-    def __get_id_list(self, user, site, attr):
-        # TODO: result of this method should be cached per user, and cache should
-        # be cleaned after some change in permissions / globalpermission
+    def get_id_list(self, user, site, attr):
+        # TODO: result of this method should be cached per user, and cache
+        # should be cleaned after some change in permissions/globalpermission
         if not user.is_authenticated() or not user.is_staff:
             return []
         
         if user.is_superuser or not settings.CMS_PERMISSION:
-            # got superuser, or permissions aren't enabled? just return grant 
+            # got superuser, or permissions aren't enabled? just return grant
             # all mark
             return PagePermissionsPermissionManager.GRANT_ALL
         

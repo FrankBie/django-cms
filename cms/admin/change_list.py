@@ -72,7 +72,7 @@ class CMSChangeList(ChangeList):
         
         perm_edit_ids = Page.permissions.get_change_id_list(request.user, site)
         perm_publish_ids = Page.permissions.get_publish_id_list(request.user, site)
-        perm_advanced_settings_ids = Page.permissions.get_advanced_settings_id_list(request.user, site)
+        perm_advanced_settings_ids = Page.permissions.get_change_advanced_settings_id_list(request.user, site)
         perm_change_list_ids = Page.permissions.get_change_id_list(request.user, site)
 
         if perm_edit_ids and perm_edit_ids != Page.permissions.GRANT_ALL:
