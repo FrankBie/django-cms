@@ -372,10 +372,10 @@ class PagePermissionsPermissionManager(models.Manager):
             # user or his group are allowed to do `attr` action
             # !IMPORTANT: page permissions must not override global permissions 
             return PagePermissionsPermissionManager.GRANT_ALL
-        # for standard users without global permissions, get all pages for him or
-        # his group/s
-        qs = PagePermission.objects.with_user(user)
-        qs.order_by('page__tree_id', 'page__level', 'page__lft')
+        # for standard users without global permissions,
+        # get all pages for the user's group/s
+        qs = PagePermission.objects.with_user(user).distinct()
+        qs = qs.order_by('page__tree_id', 'page__level', 'page__lft')
         # default is deny...
         page_id_allow_list = []
         for permission in qs:
