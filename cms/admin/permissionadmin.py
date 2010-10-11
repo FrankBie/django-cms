@@ -5,11 +5,11 @@ from django.utils.translation import ugettext as _
 
 from django.contrib import admin
 
-from cms.admin.forms import GlobalPagePermissionAdminForm, PagePermissionInlineAdminForm
-from cms.admin.models import BaseInlineFormSetWithQuerySet
 from cms.exceptions import NoPermissionsException
 from cms.models import Page, PagePermission, GlobalPagePermission, PageUser
 from cms.utils.permissions import get_user_permission_level
+from cms.admin.forms import (GlobalPagePermissionAdminForm,
+    PagePermissionInlineAdminForm, BaseInlineFormSetWithQuerySet)
 
 PAGE_ADMIN_INLINES = []
 

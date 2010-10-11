@@ -8,6 +8,7 @@ from django.core.exceptions import ValidationError
 from django.db.models.fields import BooleanField
 from django.forms.util import ErrorList
 from django.forms.widgets import HiddenInput
+from django.forms.models import BaseInlineFormSet
 from django.template.defaultfilters import slugify
 from django.utils.translation import ugettext_lazy as _, get_language
 
@@ -22,6 +23,30 @@ from cms.utils.urlutils import any_path_re
 from cms.utils.mail import mail_page_user_change
 
 from menus.menu_pool import menu_pool
+
+
+class BaseInlineFormSetWithQuerySet(BaseInlineFormSet):
+    """
+    Overriden BaseInlineFormSet, so we can pass queryset to it instead of
+    _default_manager, see django bug #11019 for more details.
+    """
+    def __init__(self, data=None, files=None, instance=None,
+                 save_as_new=False, prefix=None, queryset=None):
+        from django.db.models.fields.related import RelatedObject
+        if instance is None:
+            self.instance = self.model()
+        else:
+            self.instance = instance
+        self.save_as_new = save_as_new
+        # is there a better way to get the object descriptor?
+        self.rel_name = RelatedObject(self.fk.rel.to, self.model, self.fk).get_accessor_name()
+        if hasattr(self, 'use_queryset'):
+            qs = self.use_queryset
+        else:
+            qs = self.model._default_manager
+        qs = qs.filter(**{self.fk.name: self.instance})
+        super(BaseInlineFormSet, self).__init__(data, files,
+                                prefix=prefix or self.rel_name, queryset=qs)
 
 
 class PageAddForm(forms.ModelForm):
