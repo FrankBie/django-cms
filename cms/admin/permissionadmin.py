@@ -105,15 +105,13 @@ class GenericCmsPermissionAdmin(object):
         to Page and User model and render fieldset depending on them.
         """
         fieldsets = deepcopy(self.fieldsets)
-        
-        models = (
+        perm_models = (
             (Page, _('Page permissions')),
             (PageUser, _('User & Group permissions')),
             (PagePermission, _('Page permissions management')),
         )
-        
-        i = 0
-        for model, title in models:
+        for i, perm_model in enumerate(perm_models):
+            model, title = perm_model
             opts, fields = model._meta, []
             name = model.__name__.lower()
             for t in ('add', 'change', 'delete'):
@@ -122,7 +120,6 @@ class GenericCmsPermissionAdmin(object):
                     fields.append('can_%s_%s' % (t, name))
             if fields:
                 fieldsets.insert(2 + i, (title, {'fields': (fields,)}))
-            i += 1
         return fieldsets
     
     def _has_change_permissions_permission(self, request):
