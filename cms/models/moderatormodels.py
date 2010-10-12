@@ -54,7 +54,7 @@ class PageModerator(models.Model):
         verbose_name=_('PageModerator')
         verbose_name_plural=_('PageModerator')
         app_label = 'cms'
-
+    
     def set_decimal(self, state):
         """Converts and sets binary state to local attributes
         """
@@ -67,15 +67,18 @@ class PageModerator(models.Model):
         
         self.moderate_children = moderate_children
         self.moderate_descendants = moderate_descendants
-        
+    
     def get_decimal(self):
         return self.moderate_page * MASK_PAGE + \
             self.moderate_children * MASK_CHILDREN + \
             self.moderate_descendants * MASK_DESCENDANTS
+    
+    def __unicode__(self):
+        return "%s on %s mod: %d" % (
+            unicode(self.user), unicode(self.page), self.get_decimal()
+        )
 
-    __unicode__ = lambda self: "%s on %s mod: %d" % (unicode(self.user), unicode(self.page), self.get_decimal())
-     
-        
+
 class PageModeratorState(models.Model):
     """PageModeratorState memories all actions made on page.
     Page can be in only one advanced state. 
@@ -119,6 +122,6 @@ class PageModeratorState(models.Model):
     
     css_class = lambda self: self.action.lower()
     
-    __unicode__ = lambda self: "%s: %s" % (unicode(self.page), self.get_action_display())
-    
-    
+    def __unicode__(self):
+        return "%s: %s" % (unicode(self.page), self.get_action_display())
+

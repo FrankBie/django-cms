@@ -514,7 +514,7 @@ class Page(MpttPublisher):
         return self.has_generic_permission(request, "publish")
     
     def has_advanced_settings_permission(self, request):
-        return self.has_generic_permission(request, "advanced_settings")
+        return self.has_generic_permission(request, "change_advanced_settings")
     
     def has_change_permissions_permission(self, request):
         """Has user ability to change permissions for current page?
