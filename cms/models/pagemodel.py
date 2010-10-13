@@ -81,6 +81,9 @@ class Page(MpttPublisher):
     permissions = PagePermissionsPermissionManager()
 
     class Meta:
+        permissions = (
+            ('view_page', _('Can view page')),
+        )
         verbose_name = _('page')
         verbose_name_plural = _('pages')
         ordering = ('site','tree_id', 'lft')

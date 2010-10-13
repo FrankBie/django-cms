@@ -51,7 +51,7 @@ class PermissionModeratorTestCase(CMSTestCase):
         can_recover_page=True, can_add_pageuser=True, can_change_pageuser=True,
         can_delete_pageuser=True, can_add_pagepermission=True,
         can_change_pagepermission=True, can_delete_pagepermission=True,
-        grant_all=False):
+        grant_all=False, can_view_page=True):
         """
         Helper function for creating page user, through form on:
             /admin/cms/pageuser/add/
@@ -67,19 +67,20 @@ class PermissionModeratorTestCase(CMSTestCase):
             password=username
             
         data = {
-            'username': username, 
+            'username': username,
             'password1': password,
-            'password2': password, 
-            'can_add_page': can_add_page, 
-            'can_change_page': can_change_page, 
-            'can_delete_page': can_delete_page, 
-            'can_recover_page': can_recover_page, 
-            'can_add_pageuser': can_add_pageuser, 
-            'can_change_pageuser': can_change_pageuser, 
-            'can_delete_pageuser': can_delete_pageuser, 
-            'can_add_pagepermission': can_add_pagepermission, 
-            'can_change_pagepermission': can_change_pagepermission, 
-            'can_delete_pagepermission': can_delete_pagepermission,            
+            'password2': password,
+            'can_add_page': can_add_page,
+            'can_view_page': can_view_page,
+            'can_change_page': can_change_page,
+            'can_delete_page': can_delete_page,
+            'can_recover_page': can_recover_page,
+            'can_add_pageuser': can_add_pageuser,
+            'can_change_pageuser': can_change_pageuser,
+            'can_delete_pageuser': can_delete_pageuser,
+            'can_add_pagepermission': can_add_pagepermission,
+            'can_change_pagepermission': can_change_pagepermission,
+            'can_delete_pagepermission': can_delete_pagepermission,
         }
         response = self.client.post('/admin/cms/pageuser/add/', data)
         self.assertRedirects(response, '/admin/cms/pageuser/')
