@@ -23,7 +23,8 @@ from django.contrib.sites.models import Site
 from cms.admin.change_list import CMSChangeList
 from cms.admin.dialog.views import get_copy_dialog
 from cms.admin.forms import PageForm, PageAddForm
-from cms.admin.permissionadmin import (PAGE_ADMIN_INLINES, PagePermissionInlineAdmin)
+from cms.admin.permissionadmin import (PAGE_ADMIN_INLINES,
+    PagePermissionInlineAdmin)
 from cms.admin.views import save_all_plugins, revert_plugins
 from cms.apphook_pool import apphook_pool
 from cms.exceptions import NoPermissionsException
@@ -447,8 +448,7 @@ class PageAdmin(ModelAdmin):
         Given a ModelForm return an unsaved instance. ``change`` is True if
         the object is being changed, and False if it's being added.
         """
-        instance = super(PageAdmin, self).save_form(request, form, change)
-        return instance
+        return super(PageAdmin, self).save_form(request, form, change)
 
     def get_widget(self, request, page, lang, name):
         """
