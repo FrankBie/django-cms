@@ -24,7 +24,13 @@ CMS_PLACEHOLDER_CONF = {}
 
 # Whether to enable permissions.
 CMS_PERMISSION = False
-    
+
+# Decides if pages that don't have any view restriction in place are public
+CMS_PUBLIC_FOR_ALL = True
+
+# Decides if staff members are allowed to view pages even if they are view restricted
+CMS_PUBLIC_FOR_STAFF = True
+
 # Show the publication date field in the admin, allows for future dating
 # Changing this from True to False could cause some weirdness.  If that is required,
 # you should update your database to correct any future dated pages

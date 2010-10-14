@@ -95,6 +95,20 @@ def has_page_change_permission(request):
         return True
     return False
 
+def has_page_view_permission(request):
+    """
+    Return true if the current user has permission to view any page. This is
+    just used for building the tree - only superuser, or user with can_change in
+    globalpagepermission can change a page.
+    """
+    from cms.utils.plugins import current_site
+    if request.user.is_superuser or (
+        request.user.has_perm(Page.get_codename("view")) and (
+            GlobalPagePermission.objects.with_user(request.user).filter(
+                can_view=True, sites__in=[current_site(request)]).exists()
+            ) or (settings.CMS_PUBLIC_FOR_STAFF and request.user.is_staff)):
+        return True
+    return False
 
 def get_user_permission_level(user):
     """
@@ -225,21 +239,21 @@ def get_user_sites_queryset(user):
     if user.is_superuser:
         return qs
     
-    global_ids = GlobalPagePermission.objects.with_user(user) \
-        .filter(Q(can_add=True) | Q(can_change=True)).values_list('id', flat=True)
+    global_ids = GlobalPagePermission.objects.with_user(user).filter(
+        Q(can_add=True) | Q(can_change=True)
+    ).values_list('id', flat=True)
     
     q = Q()
     if global_ids:
         q = Q(globalpagepermission__id__in=global_ids)
         # haves some global permissions assigned
-        if not qs.filter(q).count():
-            # haves global permissions, but none of sites is specified, so he haves 
-            # access to all sites 
+        if not qs.filter(q).exists():
+            # haves global permissions, but none of sites is specified,
+            # so he haves access to all sites
             return qs
     
-    # add some pages if he haves permission to add / change her    
+    # add some pages if he haves permission to add / change them
     q |= Q(Q(page__pagepermission__user=user) | Q(page__pagepermission__group__user=user)) & \
         (Q(Q(page__pagepermission__can_add=True) | Q(page__pagepermission__can_change=True)))
     return qs.filter(q).distinct()
-    
     

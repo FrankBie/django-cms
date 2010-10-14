@@ -504,6 +504,15 @@ class Page(MpttPublisher):
         opts = cls._meta
         return '%s.%s_%s' % (opts.app_label, opts.object_name.lower(), code)
 
+    def has_view_permission(self, request):
+        from cms.models.permissionmodels import PagePermission
+        if (not request.user.is_authenticated() and not PagePermission.objects.filter(
+                page=self, can_view=True).exists()
+            ) or (settings.CMS_PUBLIC_FOR_STAFF and request.user.is_staff):
+            return True
+        return (request.user.has_perm(Page.get_codename("view")) and
+            self.has_generic_permission(request, "view"))
+
     def has_change_permission(self, request):
         if request.user.is_superuser:
             return True
