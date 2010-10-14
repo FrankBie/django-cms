@@ -499,18 +499,20 @@ class Page(MpttPublisher):
                 return t[1] 
         return _("default")
 
-    def has_change_permission(self, request):
+    def get_codename(self, code):
         opts = self._meta
+        return '%s.%s_%s' % (opts.app_label, opts.object_name.lower(), code)
+
+    def has_change_permission(self, request):
         if request.user.is_superuser:
             return True
-        return request.user.has_perm(opts.app_label + '.' + opts.get_change_permission()) and \
+        return request.user.has_perm(self.get_codename("change")) and \
             self.has_generic_permission(request, "change")
     
     def has_delete_permission(self, request):
-        opts = self._meta
         if request.user.is_superuser:
             return True
-        return request.user.has_perm(opts.app_label + '.' + opts.get_delete_permission()) and \
+        return request.user.has_perm(self.get_codename("delete")) and \
             self.has_generic_permission(request, "delete")
     
     def has_publish_permission(self, request):
@@ -520,12 +522,14 @@ class Page(MpttPublisher):
         return self.has_generic_permission(request, "change_advanced_settings")
     
     def has_change_permissions_permission(self, request):
-        """Has user ability to change permissions for current page?
+        """
+        Has user ability to change permissions for current page?
         """
         return self.has_generic_permission(request, "change_permissions")
     
     def has_add_permission(self, request):
-        """Has user ability to add page under current page?
+        """
+        Has user ability to add page under current page?
         """
         return self.has_generic_permission(request, "add")
     
@@ -535,7 +539,8 @@ class Page(MpttPublisher):
         return self.has_generic_permission(request, "move_page")
     
     def has_moderate_permission(self, request):
-        """Has user ability to moderate current page? If moderation isn't 
+        """
+        Has user ability to moderate current page? If moderation isn't
         installed, nobody can moderate.
         """
         if not settings.CMS_MODERATOR:
