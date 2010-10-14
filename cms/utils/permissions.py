@@ -18,20 +18,23 @@ except ImportError:
 _thread_locals = local()
 
 def set_current_user(user):
-    """Assigns current user from request to thread_locals, used by
+    """
+    Assigns current user from request to thread_locals, used by
     CurrentUserMiddleware.
     """
     _thread_locals.user=user
 
     
 def get_current_user():
-    """Returns current user, or None
+    """
+    Returns current user, or None
     """
     return getattr(_thread_locals, 'user', None)
 
 
 def has_page_add_permission(request):
-    """Return true if the current user has permission to add a new page. This is
+    """
+    Return true if the current user has permission to add a new page. This is
     just used for general add buttons - only superuser, or user with can_add in
     globalpagepermission can add page.
     
@@ -126,7 +129,8 @@ def get_user_permission_level(user):
     return permission.page.level
 
 def get_subordinate_users(user):
-    """Returns users queryset, containing all subordinate users to given user 
+    """
+    Returns users queryset, containing all subordinate users to given user
     including users created by given user and not assigned to any page.
     
     Not assigned users must be returned, because they shouldn't get lost, and
@@ -174,7 +178,8 @@ def get_subordinate_users(user):
     return qs
 
 def get_subordinate_groups(user):
-    """Simillar to get_subordinate_users, but returns queryset of Groups instead
+    """
+    Simillar to get_subordinate_users, but returns queryset of Groups instead
     of Users.
     """
     if user.is_superuser or \
@@ -200,16 +205,17 @@ def has_global_change_permissions_permission(user):
 
 
 
-def has_generic_permission(page_id, user, attr, site):
-    """Permission getter for single page with given id.
-    """    
-    func = getattr(Page.permissions, "get_%s_id_list" % attr)
-    permission = func(user, site)
-    return permission == Page.permissions.GRANT_ALL or page_id in permission
+def has_generic_permission(page_id, user, action, site):
+    """
+    Permission getter for single page with given id.
+    """
+    permitted = getattr(Page.permissions, "get_%s_id_list" % action)(user, site)
+    return permitted == Page.permissions.GRANT_ALL or page_id in permitted
 
 
 def get_user_sites_queryset(user):
-    """Returns queryset of all sites available for given user.
+    """
+    Returns queryset of all sites available for given user.
     
     1.  For superuser always returns all sites.
     2.  For global user returns all sites he haves in global page permissions 
