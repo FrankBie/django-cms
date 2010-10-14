@@ -8,7 +8,7 @@ from django.contrib import admin
 from cms.exceptions import NoPermissionsException
 from cms.models import Page, PagePermission, GlobalPagePermission, PageUser
 from cms.utils.permissions import get_user_permission_level
-from cms.admin.forms import GlobalPagePermissionAdminForm, PagePermissionInlineAdminForm
+from cms.admin.forms import GlobalPagePermissionAdminForm, PagePermissionInlineAdminForm, ViewRestrictionInlineAdminForm
 
 PAGE_ADMIN_INLINES = []
 
@@ -55,8 +55,34 @@ class PagePermissionInlineAdmin(admin.TabularInline):
         formset_cls._queryset = self.queryset(request)
         return formset_cls
 
-if settings.CMS_PERMISSION: 
-    PAGE_ADMIN_INLINES.append(PagePermissionInlineAdmin)
+class ViewRestrictionInlineAdmin(PagePermissionInlineAdmin):
+    extra = 1
+    form = ViewRestrictionInlineAdminForm
+    verbose_name = _("View restriction")
+    verbose_name_plural = _("View restrictions")
+    exclude = [
+        'can_add', 'can_change', 'can_delete', 'can_view',
+        'can_publish', 'can_change_advanced_settings', 'can_move_page',
+        'can_moderate', 'can_change_permissions'
+    ]
+
+    def get_formset(self, request, obj=None, **kwargs):
+        """
+        Some fields may be excluded here. User can change only permissions
+        which are available for him. E.g. if user does not haves can_publish
+        flag, he can't change assign can_publish permissions.
+        """
+        formset_cls = super(PagePermissionInlineAdmin, self).get_formset(request, obj, **kwargs)
+        formset_cls._queryset = self.queryset(request)
+        return formset_cls
+
+    def queryset(self, request):
+        """
+        Returns a QuerySet of all model instances that can be edited by the
+        admin site. This is used by changelist_view.
+        """
+        qs = PagePermission.objects.subordinate_to_user(request.user)
+        return qs.filter(can_view=True)
 
 
 class GlobalPagePermissionAdmin(admin.ModelAdmin):
@@ -77,9 +103,6 @@ class GlobalPagePermissionAdmin(admin.ModelAdmin):
         list_filter.append('can_moderate')
     else:
         exclude.append('can_moderate')
-
-if settings.CMS_PERMISSION:
-    admin.site.register(GlobalPagePermission, GlobalPagePermissionAdmin)
 
 
 class GenericCmsPermissionAdmin(object):
@@ -127,3 +150,11 @@ class GenericCmsPermissionAdmin(object):
     def has_change_permission(self, request, obj=None):
         return self._has_change_permissions_permission(request) and \
             super(self.__class__, self).has_change_permission(request, obj)
+
+
+if settings.CMS_PERMISSION:
+    admin.site.register(GlobalPagePermission, GlobalPagePermissionAdmin)
+    PAGE_ADMIN_INLINES.extend([
+        ViewRestrictionInlineAdmin,
+        PagePermissionInlineAdmin,
+    ])

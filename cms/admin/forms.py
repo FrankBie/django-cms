@@ -182,9 +182,10 @@ class PagePermissionInlineAdminForm(forms.ModelForm):
             raise forms.ValidationError(_('Add page permission also requires edit page permission.'))
         # TODO: finish this, but is it really required? might be nice to have 
         
-        # check if permissions assigned in cms are correct, and display an message
-        # if not - correctness mean: if user has add permisson to page, but he
-        # does'nt have auth permissions to add page object, display warning
+        # check if permissions assigned in cms are correct, and display
+        # a message if not - correctness mean: if user has add permisson to
+        # page, but he does'nt have auth permissions to add page object,
+        # display warning
         return self.cleaned_data
     
     def save(self, commit=True):
@@ -193,14 +194,23 @@ class PagePermissionInlineAdminForm(forms.ModelForm):
         """        
         instance = super(PagePermissionInlineAdminForm, self).save(commit=False)
         for field in self.Meta.model._meta.fields:
-            if not isinstance(field, BooleanField) or not field.name.startswith('can_'):
-                continue
-            name = field.name
-            setattr(instance, name, self.cleaned_data.get(name, False))
+            if isinstance(field, BooleanField) or field.name.startswith('can_'):
+                setattr(instance, field.name, self.cleaned_data.get(field.name, False))
         if commit:
             instance.save()
         return instance
     
+    class Meta:
+        model = PagePermission
+
+
+class ViewRestrictionInlineAdminForm(PagePermissionInlineAdminForm):
+    can_view = forms.BooleanField(label=_('can_view'), widget=HiddenInput(), initial=True)
+
+    def clean_can_view(self):
+        self.cleaned_data["can_view"] = True
+        return self.cleaned_data
+
 
 class GlobalPagePermissionAdminForm(forms.ModelForm):
 
