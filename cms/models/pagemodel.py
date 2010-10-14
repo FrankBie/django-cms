@@ -499,8 +499,9 @@ class Page(MpttPublisher):
                 return t[1] 
         return _("default")
 
-    def get_codename(self, code):
-        opts = self._meta
+    @classmethod
+    def get_codename(cls, code):
+        opts = cls._meta
         return '%s.%s_%s' % (opts.app_label, opts.object_name.lower(), code)
 
     def has_change_permission(self, request):

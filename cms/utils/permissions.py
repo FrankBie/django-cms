@@ -43,7 +43,6 @@ def has_page_add_permission(request):
     change list - then we have target and position there, so check if user can
     add page under target page will occur. 
     """        
-    opts = Page._meta
     if request.user.is_superuser:
         return True
     
@@ -54,9 +53,9 @@ def has_page_add_permission(request):
     if target is not None:
         try:
             page = Page.objects.get(pk=target)
-        except:
+        except Page.DoesNotExists:
             return False
-        if (request.user.has_perm(opts.app_label + '.' + opts.get_add_permission()) and
+        if (request.user.has_perm(Page.get_codename("add")) and
             GlobalPagePermission.objects.with_user(request.user).filter(can_add=True, sites__in=[page.site_id])):
             return True
         if position in ("first-child", "last-child"):
@@ -68,7 +67,7 @@ def has_page_add_permission(request):
     else:
         from cms.utils.plugins import current_site
         site = current_site(request)
-        if (request.user.has_perm(opts.app_label + '.' + opts.get_add_permission()) and
+        if (request.user.has_perm(Page.get_codename("add")) and
             GlobalPagePermission.objects.with_user(request.user).filter(can_add=True, sites__in=[site])):
             return True
     return False
@@ -89,9 +88,8 @@ def has_page_change_permission(request):
     globalpagepermission can change a page.
     """
     from cms.utils.plugins import current_site
-    opts = Page._meta
     if request.user.is_superuser or \
-        (request.user.has_perm(opts.app_label + '.' + opts.get_change_permission()) and
+        (request.user.has_perm(Page.get_codename("change")) and
             (GlobalPagePermission.objects.with_user(request.user).filter(can_change=True, sites__in=[current_site(request)]).exists()) or
             has_any_page_change_permissions(request)):
         return True
