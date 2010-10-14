@@ -9,10 +9,10 @@ class Migration(SchemaMigration):
     def forwards(self, orm):
         
         # Adding field 'GlobalPagePermission.can_view'
-        db.add_column('cms_globalpagepermission', 'can_view', self.gf('django.db.models.fields.BooleanField')(default=True, blank=True), keep_default=False)
+        db.add_column('cms_globalpagepermission', 'can_view', self.gf('django.db.models.fields.BooleanField')(default=False, blank=True), keep_default=False)
 
         # Adding field 'PagePermission.can_view'
-        db.add_column('cms_pagepermission', 'can_view', self.gf('django.db.models.fields.BooleanField')(default=True, blank=True), keep_default=False)
+        db.add_column('cms_pagepermission', 'can_view', self.gf('django.db.models.fields.BooleanField')(default=False, blank=True), keep_default=False)
 
 
     def backwards(self, orm):
@@ -58,7 +58,7 @@ class Migration(SchemaMigration):
             'Meta': {'object_name': 'CMSPlugin'},
             'creation_date': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'language': ('django.db.models.fields.CharField', [], {'max_length': '5', 'db_index': 'True'}),
+            'language': ('django.db.models.fields.CharField', [], {'max_length': '15', 'db_index': 'True'}),
             'level': ('django.db.models.fields.PositiveIntegerField', [], {'db_index': 'True'}),
             'lft': ('django.db.models.fields.PositiveIntegerField', [], {'db_index': 'True'}),
             'parent': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['cms.CMSPlugin']", 'null': 'True', 'blank': 'True'}),
@@ -82,7 +82,7 @@ class Migration(SchemaMigration):
             'can_move_page': ('django.db.models.fields.BooleanField', [], {'default': 'True', 'blank': 'True'}),
             'can_publish': ('django.db.models.fields.BooleanField', [], {'default': 'True', 'blank': 'True'}),
             'can_recover_page': ('django.db.models.fields.BooleanField', [], {'default': 'True', 'blank': 'True'}),
-            'can_view': ('django.db.models.fields.BooleanField', [], {'default': 'True', 'blank': 'True'}),
+            'can_view': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
             'group': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['auth.Group']", 'null': 'True', 'blank': 'True'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'sites': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'to': "orm['sites.Site']", 'null': 'True', 'blank': 'True'}),
@@ -144,7 +144,7 @@ class Migration(SchemaMigration):
             'can_moderate': ('django.db.models.fields.BooleanField', [], {'default': 'True', 'blank': 'True'}),
             'can_move_page': ('django.db.models.fields.BooleanField', [], {'default': 'True', 'blank': 'True'}),
             'can_publish': ('django.db.models.fields.BooleanField', [], {'default': 'True', 'blank': 'True'}),
-            'can_view': ('django.db.models.fields.BooleanField', [], {'default': 'True', 'blank': 'True'}),
+            'can_view': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
             'grant_on': ('django.db.models.fields.IntegerField', [], {'default': '5'}),
             'group': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['auth.Group']", 'null': 'True', 'blank': 'True'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
@@ -173,7 +173,7 @@ class Migration(SchemaMigration):
             'creation_date': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
             'has_url_overwrite': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'db_index': 'True', 'blank': 'True'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'language': ('django.db.models.fields.CharField', [], {'max_length': '5', 'db_index': 'True'}),
+            'language': ('django.db.models.fields.CharField', [], {'max_length': '15', 'db_index': 'True'}),
             'menu_title': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
             'meta_description': ('django.db.models.fields.TextField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
             'meta_keywords': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
