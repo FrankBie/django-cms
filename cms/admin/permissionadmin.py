@@ -37,8 +37,8 @@ class PagePermissionInlineAdmin(admin.TabularInline):
         permissions which are available for him. E.g. if user does not haves
         can_publish flag, he can't change assign can_publish permissions.
         """
+        exclude = self.exclude
         if obj:
-            exclude = self.exclude
             if not obj.has_add_permission(request):
                 exclude.append('can_add')
             if not obj.has_delete_permission(request):
