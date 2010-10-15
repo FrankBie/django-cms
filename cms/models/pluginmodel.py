@@ -60,7 +60,7 @@ class CMSPlugin(MpttPublisher):
         
     class PublisherMeta:
         exclude_fields = []
-        exclude_fields_append = ['plugin_ptr']
+        exclude_fields_append = ['cmsplugin_ptr',]
 
     class RenderMeta:
         index = 0
@@ -101,13 +101,6 @@ class CMSPlugin(MpttPublisher):
 
     def __unicode__(self):
         return unicode(self.id)
-    
-    class Meta:
-        app_label = 'cms'
-
-    class PublisherMeta:
-        exclude_fields = []
-        exclude_fields_append = ['plugin_ptr']
 
     def get_plugin_name(self):
         from cms.plugin_pool import plugin_pool

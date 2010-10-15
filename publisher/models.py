@@ -115,7 +115,7 @@ class Publisher(models.Model):
         for field in fields:
             if field.name in self._publisher_meta.exclude_fields:
                 continue
-
+            
             value = getattr(self, field.name)
             if isinstance(field, RelatedField):
                 related = field.rel.to
@@ -170,35 +170,36 @@ class Publisher(models.Model):
                 continue
 
             # just the dirty objects
-            for obj in m2m_manager.all():
-                remote_pk = obj.pk
-                # is this object already published?
-
-                if issubclass(obj.__class__, Publisher):
-                    # is the related object under publisher?
-                    remote_pk = obj.publisher_public_id
-                    if not obj.publisher_public_id:
-                        # publish it first...
-                        obj = obj.publish(excluded_models=excluded_models, first_instance=False)
-                        remote_pk = obj.pk
-
-
-                    updated_obj_ids.append(remote_pk)
-                    public_m2m_manager.add(obj)
-
+            for placeholder in m2m_manager.all():
+                for obj in placeholder.get_plugins_list():
+                    remote_pk = obj.pk
+                    # is this object already published?
                     if issubclass(obj.__class__, Publisher):
-                        # save obj if it was dirty
-                        if obj.publisher_state == Publisher.PUBLISHER_STATE_DIRTY:
-                            self.publisher_state = Publisher.PUBLISHER_STATE_DEFAULT
-                            self._publisher_keep_state = True
-                            obj.save_base(cls=obj.__class__)
+                        # is the related object under publisher?
+                        # remote_pk = obj.publisher_public_id
+                        # publish it first...
+                        pub_obj = obj.publish(excluded_models=excluded_models, first_instance=True)
+                        # assign the public placeholder. otherwise it'll be a child of the draft
+                        pub_obj.placeholder = public_m2m_manager.get(slot=placeholder.slot)
+                        pub_obj.save_base(cls=pub_obj.__class__)
+                        #remote_pk = obj
+
+                        #updated_obj_ids.append(placeholder.pk)
+                        #public_m2m_manager.add(placeholder)
+
+                        if issubclass(obj.__class__, Publisher):
+                            # save obj if it was dirty
+                            if obj.publisher_state == Publisher.PUBLISHER_STATE_DIRTY:
+                                self.publisher_state = Publisher.PUBLISHER_STATE_DEFAULT
+                                self._publisher_keep_state = True
+                                obj.save_base(cls=obj.__class__)
 
 
             # remove all not updated instances
             # we have to do this, because m2m doesn't have dirty flag, and
             # maybe there was some change in m2m relation
-            unupdated = public_m2m_manager.exclude(pk__in=updated_obj_ids)
-            public_m2m_manager.remove(*unupdated)
+            #unupdated = public_m2m_manager.exclude(pk__in=updated_obj_ids)
+            #public_m2m_manager.remove(*unupdated)
         ########################################################################
         # update related objects (FK) / model inheritance
         for obj in self._meta.get_all_related_objects():

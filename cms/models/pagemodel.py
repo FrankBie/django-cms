@@ -90,7 +90,7 @@ class Page(MpttPublisher):
         app_label = 'cms'
     
     class PublisherMeta:
-        exclude_fields_append = ['moderator_state', 'placeholders']
+        exclude_fields_append = ['moderator_state',] # 'placeholders'
     
     def __unicode__(self):
         title = self.get_menu_title(fallback=True)
@@ -335,8 +335,10 @@ class Page(MpttPublisher):
                 except NoHomeFound:
                     pass
                 ancestors = self.get_cached_ancestors(ascending=True)
-                if self.parent_id and ancestors[-1].pk == home_pk and not self.get_title_obj_attribute("has_url_overwrite", language, fallback) and path:
-                    path = "/".join(path.split("/")[1:])
+                # sometimes there are no ancestors
+                if len(ancestors)!=0:
+                    if self.parent_id and ancestors[-1].pk == home_pk and not self.get_title_obj_attribute("has_url_overwrite", language, fallback) and path:
+                        path = "/".join(path.split("/")[1:])
             
         if settings.CMS_DBGETTEXT and settings.CMS_DBGETTEXT_SLUGS:
             path = '/'.join([ugettext(p) for p in path.split('/')])
@@ -583,13 +585,13 @@ class Page(MpttPublisher):
         return False
     
     def get_home_pk_cache(self):
-        attr = "%s_home_pk_cache_%s" % (self.publisher_is_draft and "draft" or "public", self.site.pk)
+        attr = "%s_home_pk_cache_%s" % (self.publisher_is_draft and "draft" or "public", self.site_id)
         if not hasattr(self, attr):
             setattr(self, attr, self.get_object_queryset().get_home(self.site).pk)
         return getattr(self, attr)
     
     def set_home_pk_cache(self, value):
-        attr = "%s_home_pk_cache_%s" % (self.publisher_is_draft and "draft" or "public", self.site.pk)
+        attr = "%s_home_pk_cache_%s" % (self.publisher_is_draft and "draft" or "public", self.site_id)
         setattr(self, attr, value)
     
     home_pk_cache = property(get_home_pk_cache, set_home_pk_cache)
