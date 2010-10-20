@@ -52,7 +52,10 @@ class PagePermissionInlineAdmin(admin.TabularInline):
             if not settings.CMS_MODERATOR or not obj.has_moderate_permission(request):
                 exclude.append('can_moderate')
         formset_cls = super(PagePermissionInlineAdmin, self).get_formset(request, obj=None, exclude=exclude, *kwargs)
-        formset_cls._queryset = self.queryset(request)
+        qs = self.queryset(request)
+        if obj is not None:
+            qs = qs.filter(page=obj)
+        formset_cls._queryset = qs
         return formset_cls
 
 class ViewRestrictionInlineAdmin(PagePermissionInlineAdmin):
@@ -73,7 +76,10 @@ class ViewRestrictionInlineAdmin(PagePermissionInlineAdmin):
         flag, he can't change assign can_publish permissions.
         """
         formset_cls = super(PagePermissionInlineAdmin, self).get_formset(request, obj, **kwargs)
-        formset_cls._queryset = self.queryset(request)
+        qs = self.queryset(request)
+        if obj is not None:
+            qs = qs.filter(page=obj)
+        formset_cls._queryset = qs
         return formset_cls
 
     def queryset(self, request):
