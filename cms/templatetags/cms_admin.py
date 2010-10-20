@@ -5,6 +5,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.utils.translation import ugettext_lazy as _
 from cms.models import MASK_PAGE, MASK_CHILDREN, MASK_DESCENDANTS
 from cms.utils.admin import get_admin_menu_item_context
+from cms.utils.permissions import has_any_page_view_permissions
 
 register = template.Library()
 
@@ -56,7 +57,7 @@ def boolean_icon(value):
 
 @register.filter
 def is_restricted(page, request):
-    return not page.has_view_permission(request)
+    return has_any_page_view_permissions(request, page)
 
 @register.filter
 def moderator_choices(page, user):    
