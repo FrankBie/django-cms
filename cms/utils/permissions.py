@@ -110,13 +110,12 @@ def has_page_view_permission(request):
         return True
     return False
 
-def has_any_page_view_permissions(request, page):
+def get_any_page_view_permissions(request, page):
     from cms.utils.plugins import current_site
     return PagePermission.objects.filter(
             page__pk=page.pk,
             page__site=current_site(request),
-            can_view=True,
-        ).exists()
+            can_view=True)
 
 
 def get_user_permission_level(user):
