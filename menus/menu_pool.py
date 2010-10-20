@@ -63,6 +63,8 @@ class MenuPool(object):
         lang = get_language()
         prefix = getattr(settings, "CMS_CACHE_PREFIX", "menu_cache_")
         key = "%smenu_nodes_%s_%s" % (prefix, lang, site_id)
+        if request.user.is_authenticated():
+            key += "_%s" % request.user.pk
         self.cache_keys.add(key)
         cached_nodes = cache.get(key, None)
         if cached_nodes:

@@ -125,7 +125,9 @@ def details(request, page_id=None, slug=None, template_name=settings.CMS_TEMPLAT
                 path = urlquote(request.get_full_path())
             tup = django_settings.LOGIN_URL , "next", path
             return HttpResponseRedirect('%s?%s=%s' % tup)
-        elif not has_view_permissions and not settings.CMS_PUBLIC_FOR_ALL:
+        elif not has_view_permissions:
+            raise Http404("CMS: No page found for site %s" % unicode(site.name))
+        elif not settings.CMS_PUBLIC_FOR_ALL:
             raise Http404("CMS: No page found for site %s" % unicode(site.name))
     else:
         has_change_permissions = False
