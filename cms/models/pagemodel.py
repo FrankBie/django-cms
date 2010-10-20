@@ -82,7 +82,7 @@ class Page(MpttPublisher):
 
     class Meta:
         permissions = (
-            ('view_page', _('Can view page')),
+            ('view_page', 'Can view page'),
         )
         verbose_name = _('page')
         verbose_name_plural = _('pages')
