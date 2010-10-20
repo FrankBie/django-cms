@@ -508,9 +508,13 @@ class Page(MpttPublisher):
 
     def has_view_permission(self, request):
         from cms.models.permissionmodels import PagePermission
-        if (not request.user.is_authenticated() and not PagePermission.objects.filter(
-                page=self, can_view=True).exists()
-            ) or (settings.CMS_PUBLIC_FOR_STAFF and request.user.is_staff):
+        if settings.CMS_PUBLIC_FOR_STAFF and request.user.is_staff):
+            return True
+        restricted = PagePermission.objects.filter(page=self, can_view=True).exists()
+        if not request.user.is_authenticated() and not restricted:
+            return True
+        if (request.user.is_authenticated() and not restricted and
+                settings.CMS_PUBLIC_FOR_ALL==True):
             return True
         return (request.user.has_perm(Page.get_codename("view")) and
             self.has_generic_permission(request, "view"))
