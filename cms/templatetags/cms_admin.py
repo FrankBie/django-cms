@@ -55,6 +55,10 @@ def boolean_icon(value):
     return mark_safe(u'<img src="%simg/admin/icon-%s.gif" alt="%s" />' % (settings.ADMIN_MEDIA_PREFIX, BOOLEAN_MAPPING[value], value))
 
 @register.filter
+def is_restricted(page, request):
+    return not page.has_view_permission(request)
+
+@register.filter
 def moderator_choices(page, user):    
     """Returns simple moderator choices used for checkbox rendering, as a value
     is used mask value. Optimized, uses caching from change list.
