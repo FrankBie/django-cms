@@ -72,14 +72,14 @@ class CMSMenu(Menu):
         actual_pages = []
 
         for page in pages:
+            if not page.has_view_permission(request):
+                # Don't include pages the user doesn't have access to
+                continue
             if not home:
                 home = page
             page.home_pk_cache = home.pk
             if first and page.pk != home.pk:
                 home_cut = True
-            if not page.has_view_permission(request):
-                # don't include pages we don't have access to
-                continue
             elif not settings.CMS_PUBLIC_FOR_ALL:
                 continue
             if (page.parent_id == home.pk or page.parent_id in home_children) and home_cut:

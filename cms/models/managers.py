@@ -356,12 +356,14 @@ class PagePermissionsPermissionManager(models.Manager):
         # should be cleaned after some change in permissions/globalpermission
         if not user.is_authenticated() or not user.is_staff:
             return []
-        if user.is_superuser or not settings.CMS_PERMISSION:
+        if action != "can_view" and (user.is_superuser or not settings.CMS_PERMISSION):
             # got superuser, or permissions aren't enabled?
             # just return "grant all" mark \o/
             return PagePermissionsPermissionManager.GRANT_ALL
         from cms.models import (GlobalPagePermission, PagePermission,
                                 MASK_PAGE, MASK_CHILDREN, MASK_DESCENDANTS)
+        if not request.user.is_authenticated():
+            return CMS_PUBLIC_FOR_ALL and PagePermissionsPermissionManager.GRANT_ALL or []
         # check global permissions
         global_permissions = GlobalPagePermission.objects.with_user(user)
         params = {

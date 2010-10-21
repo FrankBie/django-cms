@@ -508,16 +508,25 @@ class Page(MpttPublisher):
 
     def has_view_permission(self, request):
         from cms.models.permissionmodels import PagePermission
+        # staff is allowed to see everything
         if settings.CMS_PUBLIC_FOR_STAFF and request.user.is_staff:
             return True
+        # does any restriction exist
         restricted = PagePermission.objects.filter(page=self, can_view=True).exists()
+        # anonymous user, no restriction
         if not request.user.is_authenticated() and not restricted:
             return True
+        # authenticated user, no restriction and public for all fallback
         if (request.user.is_authenticated() and not restricted and
-                settings.CMS_PUBLIC_FOR_ALL==True):
+                settings.CMS_PUBLIC_FOR_ALL):
             return True
-        return (request.user.has_perm(Page.get_codename("view")) and
-            self.has_generic_permission(request, "view"))
+        # anyonymous user, page has restriction, generally false
+        if not request.user.is_authenticated() and restricted:
+            return False
+        # Authenticated user
+        # Django wide auth perms "can_view" or cms auth perms "can_view"
+        return (request.user.has_perm(Page.get_codename("view")) or
+                self.has_generic_permission(request, "view"))
 
     def has_change_permission(self, request):
         if request.user.is_superuser:
