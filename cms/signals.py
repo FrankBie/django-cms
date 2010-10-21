@@ -209,7 +209,7 @@ def update_placeholders(instance, **kwargs):
             found[placeholder_name] = placeholder
 
 def invalidate_menu_cache(instance, **kwargs):
-    menu_pool.clear(instance.site_id)    
+    menu_pool.clear(instance.site_id)
 
 if settings.CMS_MODERATOR:
     # tell moderator, there is something happening with this page
@@ -221,9 +221,12 @@ signals.pre_delete.connect(invalidate_menu_cache, sender=Page)
  
 def pre_save_user(instance, raw, **kwargs):
     clear_user_permission_cache(instance)
+    if instance.pk:
+        menu_pool.clear(user_id=instance.pk)
 
 def pre_delete_user(instance, **kwargs):
     clear_user_permission_cache(instance)
+    menu_pool.clear(user_id=instance.pk)
 
 def pre_save_group(instance, raw, **kwargs):
     if instance.pk:
@@ -233,22 +236,26 @@ def pre_save_group(instance, raw, **kwargs):
 def pre_delete_group(instance, **kwargs):
     for user in instance.user_set.filter(is_staff=True):
         clear_user_permission_cache(user)
-    
+
 def pre_save_pagepermission(instance, raw, **kwargs):
     if instance.user:
         clear_user_permission_cache(instance.user)
+        menu_pool.clear(user_id=instance.user.pk)
 
 def pre_delete_pagepermission(instance, **kwargs):
     if instance.user:
         clear_user_permission_cache(instance.user)
+        menu_pool.clear(user_id=instance.user.pk)
 
 def pre_save_globalpagepermission(instance, raw, **kwargs):
     if instance.user:
         clear_user_permission_cache(instance.user)
+        menu_pool.clear(user_id=instance.user.pk)
 
 def pre_delete_globalpagepermission(instance, **kwargs):
     if instance.user:
         clear_user_permission_cache(instance.user)
+        menu_pool.clear(user_id=instance.user.pk)
 
 def pre_save_delete_page(instance, **kwargs):
     clear_permission_cache()
