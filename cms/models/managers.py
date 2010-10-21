@@ -337,7 +337,9 @@ class PagePermissionsPermissionManager(models.Manager):
         appropriate backend function.
         """
         if name.startswith("get_") and name.endswith("_id_list"):
-            return lambda user, site: self.get_id_list(user, site, "can_%s" % name[4:-8])
+            def _get_id_list(user, site=None):
+                return self.get_id_list(user, site, "can_%s" % name[4:-8])
+            return _get_id_list
         raise AttributeError(name)
     
     def get_moderate_id_list(self, user, site):
@@ -362,7 +364,12 @@ class PagePermissionsPermissionManager(models.Manager):
                                 MASK_PAGE, MASK_CHILDREN, MASK_DESCENDANTS)
         # check global permissions
         global_permissions = GlobalPagePermission.objects.with_user(user)
-        if global_permissions.filter(**{action: True, 'sites__in': [site]}).exists():
+        params = {
+            action: True
+        }
+        if site is not None:
+            params.update({'sites__in': [site]})
+        if global_permissions.filter(**params).exists():
             # user or his group are allowed to do `action`
             # !IMPORTANT: page permissions must not override global permissions 
             return PagePermissionsPermissionManager.GRANT_ALL
