@@ -504,7 +504,7 @@ class Page(MpttPublisher):
     @classmethod
     def get_codename(cls, code):
         opts = cls._meta
-        return '%s.%s_%s' % (opts.app_label, opts.object_name.lower(), code)
+        return '%s.%s_%s' % (opts.app_label, code, opts.object_name.lower())
 
     def has_view_permission(self, request):
         from cms.models.permissionmodels import PagePermission
