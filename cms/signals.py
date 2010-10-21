@@ -138,6 +138,7 @@ def post_save_user(instance, raw, created, **kwargs):
     )
     cursor.execute(query) 
     cursor.close()
+    menu_pool.clear(user_id=instance.pk)
     
 def post_save_user_group(instance, raw, created, **kwargs):
     """The same like post_save_user, but for Group, required only when 
@@ -195,6 +196,7 @@ def post_save_page(instance, raw, created, **kwargs):
         from cms.utils.moderator import page_changed
         page_changed(instance, old_page)
 
+
 def update_placeholders(instance, **kwargs):
     from cms.utils.plugins import get_placeholders
     placeholders = get_placeholders(instance.get_template())
@@ -221,12 +223,9 @@ signals.pre_delete.connect(invalidate_menu_cache, sender=Page)
  
 def pre_save_user(instance, raw, **kwargs):
     clear_user_permission_cache(instance)
-    if instance.pk:
-        menu_pool.clear(user_id=instance.pk)
 
 def pre_delete_user(instance, **kwargs):
     clear_user_permission_cache(instance)
-    menu_pool.clear(user_id=instance.pk)
 
 def pre_save_group(instance, raw, **kwargs):
     if instance.pk:
@@ -240,22 +239,18 @@ def pre_delete_group(instance, **kwargs):
 def pre_save_pagepermission(instance, raw, **kwargs):
     if instance.user:
         clear_user_permission_cache(instance.user)
-        menu_pool.clear(user_id=instance.user.pk)
 
 def pre_delete_pagepermission(instance, **kwargs):
     if instance.user:
         clear_user_permission_cache(instance.user)
-        menu_pool.clear(user_id=instance.user.pk)
 
 def pre_save_globalpagepermission(instance, raw, **kwargs):
     if instance.user:
         clear_user_permission_cache(instance.user)
-        menu_pool.clear(user_id=instance.user.pk)
 
 def pre_delete_globalpagepermission(instance, **kwargs):
     if instance.user:
         clear_user_permission_cache(instance.user)
-        menu_pool.clear(user_id=instance.user.pk)
 
 def pre_save_delete_page(instance, **kwargs):
     clear_permission_cache()

@@ -35,12 +35,14 @@ class MenuPool(object):
             sok = not site_id
             lok = not language
             uok = not user_id
-            if site_id and (site_id == keysite or site_id == int(keysite)):
-                sok = True
+            if keysite is not None:
+                if site_id and (site_id == keysite or site_id == int(keysite)):
+                    sok = True
             if language and language == keylang:
                 lok = True
-            if user_id and (user_id == keyuser or user_id == int(keyuser)):
-                uok = True
+            if keyuser is not None:
+                if user_id and (user_id == keyuser or user_id == int(keyuser)):
+                    uok = True
             return lok and sok and uok
         to_be_deleted = []
         for key in self.cache_keys:
