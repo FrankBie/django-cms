@@ -362,7 +362,7 @@ class PagePermissionsPermissionManager(models.Manager):
             return PagePermissionsPermissionManager.GRANT_ALL
         from cms.models import (GlobalPagePermission, PagePermission,
                                 MASK_PAGE, MASK_CHILDREN, MASK_DESCENDANTS)
-        if not request.user.is_authenticated():
+        if not user.is_authenticated():
             return CMS_PUBLIC_FOR_ALL and PagePermissionsPermissionManager.GRANT_ALL or []
         # check global permissions
         global_permissions = GlobalPagePermission.objects.with_user(user)
