@@ -258,12 +258,17 @@ def pre_save_delete_page(instance, **kwargs):
     clear_permission_cache()
 
 if settings.CMS_PERMISSION:
-    # TODO: will this work also with PageUser and PageGroup??
     signals.pre_save.connect(pre_save_user, sender=User)
     signals.pre_delete.connect(pre_delete_user, sender=User)
+
+    signals.pre_save.connect(pre_save_user, sender=PageUser)
+    signals.pre_delete.connect(pre_delete_user, sender=PageUser)
     
     signals.pre_save.connect(pre_save_group, sender=Group)
     signals.pre_delete.connect(pre_delete_group, sender=Group)
+
+    signals.pre_save.connect(pre_save_group, sender=PageUserGroup)
+    signals.pre_delete.connect(pre_delete_group, sender=PageUserGroup)
     
     signals.pre_save.connect(pre_save_pagepermission, sender=PagePermission)
     signals.pre_delete.connect(pre_delete_pagepermission, sender=PagePermission)
@@ -273,4 +278,3 @@ if settings.CMS_PERMISSION:
     
     signals.pre_save.connect(pre_save_delete_page, sender=Page)
     signals.pre_delete.connect(pre_save_delete_page, sender=Page)
-
