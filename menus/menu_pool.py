@@ -30,24 +30,21 @@ class MenuPool(object):
         register()
         self.discovered = True
 
-    def clear(self, site_id=None, language=None, user_id=None):
-        def relevance_test(keylang, keysite, keyuser):
+    def clear(self, site_id=None, language=None, all=False):
+        def relevance_test(keylang, keysite):
+            if all:
+                return True
             sok = not site_id
             lok = not language
-            uok = not user_id
-            if keysite is not None:
-                if site_id and (site_id == keysite or site_id == int(keysite)):
-                    sok = True
+            if site_id and (site_id == keysite or site_id == int(keysite)):
+                sok = True
             if language and language == keylang:
                 lok = True
-            if keyuser is not None:
-                if user_id and (user_id == keyuser or user_id == int(keyuser)):
-                    uok = True
-            return lok and sok and uok
+            return lok and sok
         to_be_deleted = []
         for key in self.cache_keys:
             keylang, keysite, keyuser = lex_cache_key(key)
-            if relevance_test(keylang, keysite, keyuser):
+            if relevance_test(keylang, keysite):
                 to_be_deleted.append(key)
         cache.delete_many(to_be_deleted)
         self.cache_keys.difference_update(to_be_deleted)
