@@ -26,7 +26,7 @@ CMS_PLACEHOLDER_CONF = {}
 CMS_PERMISSION = False
 
 # Decides if pages that don't have any view restriction in place are public
-CMS_PUBLIC_FOR_ALL = False
+CMS_PUBLIC_FOR_ALL = True
 
 # Decides if staff members are allowed to view pages even if they are view restricted
 CMS_PUBLIC_FOR_STAFF = True
