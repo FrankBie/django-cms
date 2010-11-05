@@ -70,22 +70,28 @@ class CMSTestCase(TestCase):
         settings._wrapped = self._original_settings_wrapped
         super(CMSTestCase, self)._post_teardown()
     
-        
     def login_user(self, user):
         logged_in = self.client.login(username=user.username, password=user.username)
         self.user = user
         self.assertEqual(logged_in, True)
     
-    
     def get_new_page_data(self, parent_id=''):
-        page_data = {'title':'test page %d' % self.counter, 
-            'slug':'test-page-%d' % self.counter, 'language':settings.LANGUAGES[0][0],
-            'site':1, 'template':'nav_playground.html', 'parent': parent_id}
-        
+        page_data = {
+            'title': 'test page %d' % self.counter,
+            'slug': 'test-page-%d' % self.counter,
+            'language': settings.LANGUAGES[0][0],
+            'template': 'nav_playground.html',
+            'parent': parent_id,
+            'site': 1,
+        }
         # required only if user haves can_change_permission
         page_data['pagepermission_set-TOTAL_FORMS'] = 0
         page_data['pagepermission_set-INITIAL_FORMS'] = 0
         page_data['pagepermission_set-MAX_NUM_FORMS'] = 0
+
+        page_data['pagepermission_set-2-TOTAL_FORMS'] = 0
+        page_data['pagepermission_set-2-INITIAL_FORMS'] = 0
+        page_data['pagepermission_set-2-MAX_NUM_FORMS'] = 0
         
         self.counter = self.counter + 1
         return page_data
@@ -96,7 +102,6 @@ class CMSTestCase(TestCase):
         print "-------------------------- %s --------------------------------" % (title or "page structure")
         for page in Page.objects.drafts().order_by('tree_id', 'parent', 'lft'):
             print "%s%s #%d" % ("    " * (page.level), page, page.id)
-    
     
     def assertObjectExist(self, qs, **filter):
         try:
