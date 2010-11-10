@@ -91,14 +91,14 @@ class PermissionModeratorTestCase(CMSTestCase):
         can_add=False, can_change=False, can_delete=False, 
         can_change_advanced_settings=False, can_publish=False, 
         can_change_permissions=False, can_move_page=False, can_moderate=False, 
-        grant_all=False):
+        grant_all=False, can_view=True):
         """Assigns given user to page, and gives him requested permissions. 
         
         Note: this is not happening over frontend, maybe a test for this in 
         future will be nice.
         """
         if grant_all:
-            return self.assign_user_to_page(page, user, grant_on, 
+            return self.assign_user_to_page(page, user, grant_on,
                 True, True, True, True, True, True, True, True)
         
         # just check if the current logged in user even can change the page and 
@@ -109,14 +109,14 @@ class PermissionModeratorTestCase(CMSTestCase):
         data = {
             'can_add': can_add,
             'can_change': can_change,
-            'can_delete': can_delete, 
+            'can_delete': can_delete,
             'can_change_advanced_settings': can_change_advanced_settings,
-            'can_publish': can_publish, 
-            'can_change_permissions': can_change_permissions, 
-            'can_move_page': can_move_page, 
-            'can_moderate': can_moderate,  
+            'can_publish': can_publish,
+            'can_change_permissions': can_change_permissions,
+            'can_move_page': can_move_page,
+            'can_moderate': can_moderate,
+            'can_view': can_view,
         }
-        
         page_permission = PagePermission(page=page, user=user, grant_on=grant_on, **data)
         page_permission.save()
         return page_permission
@@ -228,11 +228,15 @@ class PermissionModeratorTestCase(CMSTestCase):
             is_superuser=True)
         self.user_super.set_password("super")
         self.user_super.save()
+
+        # Normal user
+        self.user_normal = User(username="normal", is_staff=False, is_active=True,  is_superuser=False)
+        self.user_normal.set_password("normal")
+        self.user_normal.save()
         
         # create basic structure ... 
         
         self.login_user(self.user_super)
-        
         
         home = self.create_page(title="home")
         self.publish_page(home)
