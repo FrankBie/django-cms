@@ -409,7 +409,9 @@ class Page(MPTTModel):
                 transaction.commit()
 
             # we hook into the modified copy_page routing to do the heavy lifting of copying the draft page to a new public page
-            new_public = self.copy_page(target=None, site=self.site, copy_moderation=False, position=None, copy_permissions=False, public_copy=True)
+            new_public = self.copy_page(target=None, site=self.site,
+                                        copy_moderation=False, position=None,
+                                        copy_permissions=False, public_copy=True)
 
             # taken from Publisher - copy_page needs to call self._publisher_save_public(copy) for mptt insertion
             # insert_at() was maybe calling _create_tree_space() method, in this
@@ -467,6 +469,7 @@ class Page(MPTTModel):
         # fire signal after publishing is done
         import cms.signals as cms_signals
         cms_signals.post_publish.send(sender=Page, instance=self)
+        transaction.commit()
         return published
         
     def delete(self):
@@ -843,9 +846,9 @@ class Page(MPTTModel):
         if settings.CMS_MODERATOR:
             has_moderator_state = getattr(self, '_has_moderator_state_chache', None)
             if has_moderator_state == False:
-                return None
+                return self.pagemoderatorstate_set.none()
             return self.pagemoderatorstate_set.all().order_by('created',)[:5]
-        return None
+        return self.pagemoderatorstate_set.none()
     
     def get_moderator_queryset(self):
         """Returns ordered set of all PageModerator instances, which should 
@@ -882,6 +885,12 @@ class Page(MPTTModel):
         #return is_public_published(self)
         return False
         
+    def reload(self):
+        """
+        Reload a page from the database
+        """
+        return Page.objects.get(pk=self.pk)
+        
     def requires_approvement(self):
         return self.moderator_state in (Page.MODERATOR_NEED_APPROVEMENT, Page.MODERATOR_NEED_DELETE_APPROVEMENT)
     
@@ -904,6 +913,8 @@ class Page(MPTTModel):
         
         return moderation_value
 
+# this block is not in the upstream
+# @FIXME
     def _collect_delete_marked_sub_objects(self, seen_objs, parent=None, nullable=False, excluded_models=None):
         if excluded_models is None:
             excluded_models = [self.__class__]
@@ -991,7 +1002,8 @@ class Page(MPTTModel):
                 # this exception may happen because of the plugin relations
                 # to CMSPlugin and mppt way of _meta assignment
                 pass
-
+# this block is not in the upstream end
+# @FIXME
     def get_object_queryset(self):
         """Returns smart queryset depending on object type - draft / public
         """

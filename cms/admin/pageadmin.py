@@ -868,7 +868,9 @@ class PageAdmin(ModelAdmin):
         if not page.has_moderate_permission(request):
             return HttpResponseForbidden("Denied")
         page.publish()
-        referer = request.META['HTTP_REFERER']
+#        referer = request.META['HTTP_REFERER']
+        referer = request.META.get('HTTP_REFERER', '')
+
         path = '../../'
         if 'admin' not in referer:
             path = '%s?edit-off' % referer.split('?')[0]
@@ -1050,14 +1052,16 @@ class PageAdmin(ModelAdmin):
         """
         Switch the in_navigation of a page
         """
+        # why require post and still have page id in the URL???
         if request.method != 'POST':
             return HttpResponseNotAllowed
         page = get_object_or_404(Page, pk=page_id)
         if page.has_change_permission(request):
-            if page.in_navigation:
-                page.in_navigation = False
-            else:
-                page.in_navigation = True
+            page.in_navigation = not page.in_navigation
+
+
+
+
             page.save(force_state=Page.MODERATOR_NEED_APPROVEMENT)
             return admin_utils.render_admin_menu_item(request, page)
         return HttpResponseForbidden(_("You do not have permission to change this page's in_navigation status"))
@@ -1270,6 +1274,9 @@ class PageAdmin(ModelAdmin):
             if 'plugin_id' in request.POST:
                 plugin = CMSPlugin.objects.get(pk=int(request.POST['plugin_id']))
                 page = plugins.get_page_from_plugin_or_404(plugin)
+                if not page.has_change_permission(request):
+                    raise Http404
+
                 placeholder_slot = request.POST['placeholder']
                 placeholders = plugins.get_placeholders(page.get_template())
                 if not placeholder_slot in placeholders:
@@ -1374,7 +1381,7 @@ class PageAdmin(ModelAdmin):
     def lookup_allowed(self, key, *args, **kwargs):
         if key == 'site__exact':
             return True
-        return super(PageAdmin, self).lookup_allowed(key, *args)
+        return super(PageAdmin, self).lookup_allowed(key, *args, **kwargs)
 
 contribute_fieldsets(PageAdmin)
 contribute_list_filter(PageAdmin)

@@ -344,7 +344,9 @@ class PagePermissionManager(BasicPagePermissionManager):
         """
         from cms.models import ACCESS_DESCENDANTS, ACCESS_CHILDREN, \
             ACCESS_PAGE_AND_CHILDREN, ACCESS_PAGE_AND_DESCENDANTS 
+
         #@todo caching here?
+        #use mptt functionality here
         upper_tree_ids = page.get_ancestors().values_list('id', flat=True)
         q = (Q(page__tree_id=page.tree_id) & (Q(page__id__in=upper_tree_ids) | Q(page__id=page.id)) & (
             Q(page=page) 
@@ -465,7 +467,7 @@ class PagePermissionsPermissionManager(models.Manager):
         cached = get_permission_cache(user, attr)
         if cached is not None:
             log.debug("hit cache __get_id_list site%s user%s attr%s" %(site,user,attr))
-           return cached
+            return cached
         # check global permissions
         global_permissions = GlobalPagePermission.objects.with_user(user)
         if global_permissions.filter(**{
@@ -480,9 +482,9 @@ class PagePermissionsPermissionManager(models.Manager):
         qs.order_by('page__tree_id', 'page__level', 'page__lft')
         # default is denny...
         page_id_allow_list = []
+        
         for permission in qs:
-            is_allowed = getattr(permission, attr)
-            if is_allowed:
+            if getattr(permission, attr):
 
                 # can add is special - we are actually adding page under current page
                 if permission.grant_on & MASK_PAGE or attr is "can_add":
