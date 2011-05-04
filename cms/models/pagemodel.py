@@ -844,7 +844,7 @@ class Page(MPTTModel):
         """
         # TODO: optimize SQL... 1 query per page 
         if settings.CMS_MODERATOR:
-            has_moderator_state = getattr(self, '_has_moderator_state_chache', None)
+            has_moderator_state = getattr(self, '_has_moderator_state_cache', None)
             if has_moderator_state == False:
                 return self.pagemoderatorstate_set.none()
             return self.pagemoderatorstate_set.all().order_by('created',)[:5]

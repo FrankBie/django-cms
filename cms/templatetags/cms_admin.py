@@ -2,9 +2,14 @@
 from classytags.arguments import Argument
 from classytags.core import Options
 from classytags.helpers import InclusionTag
+from cms.conf import settings as cms_settings
 from cms.models import MASK_PAGE, MASK_CHILDREN, MASK_DESCENDANTS
 from cms.utils.admin import get_admin_menu_item_context
 from cms.utils.permissions import get_any_page_view_permissions
+from cms.cache.admin_menu_item_restricted import (get_admin_menu_item_restricted_cache,
+    set_admin_menu_item_restricted_cache)
+
+
 from django import template
 from django.conf import settings
 from django.utils.safestring import mark_safe
@@ -77,13 +82,25 @@ def boolean_icon(value):
 
 @register.filter
 def is_restricted(page, request):
+    """
+    Add caching here as loading time is to slow
+    """
+    cached_snippet = get_admin_menu_item_restricted_cache(page.id)
+    if cached_snippet is not None:
+        return cached_snippet
+    
     all_perms = get_any_page_view_permissions(request, page)
     icon = boolean_icon(all_perms.exists())
-    return mark_safe(
+    
+    snippet = mark_safe(
         ugettext('<span title="Restrictions: %(title)s">%(icon)s</span>') % {
             'title': u', '.join((perm.get_grant_on_display() for perm in all_perms)) or None,
             'icon': icon,
         })
+    if snippet is not None:
+        set_admin_menu_item_restricted_cache(page.id,snippet)
+    return snippet 
+ 
 
 @register.filter
 def moderator_choices(page, user):    

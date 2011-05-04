@@ -1,15 +1,21 @@
 # -*- coding: utf-8 -*-
+import logging as log
 from cms.exceptions import NoHomeFound
 from cms.models import Title, Page, PageModerator
+from cms.models.permissionmodels import PagePermission
 from cms.models.moderatormodels import MASK_PAGE, MASK_CHILDREN, \
     MASK_DESCENDANTS, PageModeratorState
 from cms.utils.permissions import get_user_sites_queryset
+from menus.utils import find_children
+from mptt.templatetags import mptt_tags
+
+
 from django.conf import settings
 from django.contrib.admin.views.main import ChangeList, ALL_VAR, IS_POPUP_VAR, \
     ORDER_TYPE_VAR, ORDER_VAR, SEARCH_VAR
 from django.contrib.sites.models import Site
-from menus.utils import find_children
-from mptt.templatetags import mptt_tags
+
+
 
 
 
@@ -83,7 +89,8 @@ class CMSChangeList(ChangeList):
         perm_edit_ids = Page.permissions.get_change_id_list(request.user, site)
         perm_publish_ids = Page.permissions.get_publish_id_list(request.user, site)
         perm_advanced_settings_ids = Page.permissions.get_advanced_settings_id_list(request.user, site)
-        perm_change_list_ids = Page.permissions.get_change_id_list(request.user, site)
+        #perm_change_list_ids = Page.permissions.get_change_id_list(request.user, site)
+        perm_change_list_ids = perm_edit_ids
         
         if perm_edit_ids and perm_edit_ids != Page.permissions.GRANT_ALL:
             pages = pages.filter(pk__in=perm_edit_ids)
@@ -143,6 +150,9 @@ class CMSChangeList(ChangeList):
                 page.permission_publish_cache = perm_publish_ids == Page.permissions.GRANT_ALL or page.pk in perm_publish_ids
                 page.permission_advanced_settings_cache = perm_advanced_settings_ids == Page.permissions.GRANT_ALL or page.pk in perm_advanced_settings_ids
                 page.permission_user_cache = request.user
+                # add the is restricted here
+                #page.is_restricted_cache = PagePermission.objects.for_page_upper_tree(page=page).filter(can_view=True).exists()
+   
             
             if settings.CMS_MODERATOR:
                 # set public instance existence state
@@ -154,11 +164,11 @@ class CMSChangeList(ChangeList):
                     moderation_value = page_moderator[page.pk]
                 except:
                     pass
-                page._moderation_value_cahce = moderation_value
+                page._moderation_value_cache = moderation_value
                 page._moderation_value_cache_for_user_id = request.user.pk
                 
                 #moderation states
-                page._has_moderator_state_chache = page.pk in pagemoderator_states_id_set
+                page._has_moderator_state_cache = page.pk in pagemoderator_states_id_set
                 
             if page.root_node or self.is_filtered():
                 page.last = True
@@ -183,10 +193,10 @@ class CMSChangeList(ChangeList):
             # "childrens" is the fully cached version of children.
             page.childrens = children
 
-        
-        # TODO: OPTIMIZE!!
-        titles = Title.objects.filter(page__in=ids)
-        for page in all_pages:# add the title and slugs and some meta data
+            #put the title loadin in the loop
+            # get the titles for this item
+            titles = Title.objects.filter(page=page)
+            if titles:
             page.title_cache = {}
             page.all_languages = []
             for title in titles:
@@ -195,6 +205,20 @@ class CMSChangeList(ChangeList):
                     if not title.language in page.all_languages:
                         page.all_languages.append(title.language)
             page.all_languages.sort()
+            
+        
+        # TODO: OPTIMIZE!!
+#        titles = Title.objects.filter(page__in=ids)
+#        for page in all_pages:# add the title and slugs and some meta data
+#            log.debug("processing page title %s" %(page))
+#            page.title_cache = {}
+#            page.all_languages = []
+#            for title in titles:
+#                if title.page_id == page.pk:
+#                    page.title_cache[title.language] = title
+#                    if not title.language in page.all_languages:
+#                        page.all_languages.append(title.language)
+#            page.all_languages.sort()
         self.root_pages = root_pages
         
     def get_items(self):
