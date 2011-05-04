@@ -9,6 +9,8 @@ from django.core.handlers.wsgi import WSGIRequest
 from django.core.urlresolvers import reverse
 from django.db.models.signals import pre_save, post_save
 from django.template.context import Context
+from django.test.client import (encode_multipart, BOUNDARY, MULTIPART_CONTENT, 
+    FakePayload)
 from django.test.testcases import TestCase
 from menus.menu_pool import menu_pool
 from urlparse import urlparse
@@ -125,13 +127,14 @@ class CMSTestCase(TestCase):
         self.counter = self.counter + 1
         return page_data
     
-    def print_page_structure(self, title=None):
+    def print_page_structure(self, qs):
         """Just a helper to see the page struct.
         """
-        for page in Page.objects.drafts().order_by('tree_id', 'lft'):
+        for page in qs.order_by('tree_id', 'lft'):
             ident = "  " * page.level
             
-            print "%s%s, lft: %s, rght: %s" % (ident, page, page.lft, page.rght)
+            print "%s%s (%s), lft: %s, rght: %s, tree_id: %s" % (ident, page,
+                                    page.pk, page.lft, page.rght, page.tree_id)
     
     def print_node_structure(self, nodes, *extra):
         def _rec(nodes, level=0):
@@ -204,7 +207,7 @@ class CMSTestCase(TestCase):
         
         return Context(context)   
         
-    def get_request(self, path=None, language=None):
+    def get_request(self, path=None, language=None, post_data=None):
         if not path:
             path = self.get_pages_root()
         
@@ -235,6 +238,14 @@ class CMSTestCase(TestCase):
             'wsgi.run_once':     False,
             'wsgi.input':        ''
         }
+        if post_data:
+            post_data = encode_multipart(BOUNDARY, post_data)
+            environ.update({
+                    'CONTENT_LENGTH': len(post_data),
+                    'CONTENT_TYPE':   MULTIPART_CONTENT,
+                    'REQUEST_METHOD': 'POST',
+                    'wsgi.input':     FakePayload(post_data),
+            })
         request = WSGIRequest(environ)
         request.session = self.client.session
         request.user = getattr(self, 'user', AnonymousUser())
