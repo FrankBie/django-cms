@@ -197,14 +197,14 @@ class CMSChangeList(ChangeList):
             # get the titles for this item
             titles = Title.objects.filter(page=page)
             if titles:
-            page.title_cache = {}
-            page.all_languages = []
-            for title in titles:
-                if title.page_id == page.pk:
-                    page.title_cache[title.language] = title
-                    if not title.language in page.all_languages:
-                        page.all_languages.append(title.language)
-            page.all_languages.sort()
+                page.title_cache = {}
+                page.all_languages = []
+                for title in titles:
+                    if title.page_id == page.pk:
+                        page.title_cache[title.language] = title
+                        if not title.language in page.all_languages:
+                            page.all_languages.append(title.language)
+                page.all_languages.sort()
             
         
         # TODO: OPTIMIZE!!
