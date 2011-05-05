@@ -12,8 +12,9 @@ from cms.models.pagemodel import Page
 from cms.models.permissionmodels import GlobalPagePermission 
 from cms.utils import permissions, moderator, get_language_from_request
 from cms.conf import global_settings as cms_settings
+from cms.cache.admin_menu_item_restricted import clear_is_restricted_cache
 # load only if the settings for admin caching are turned on
-from cms.cache.admin_menu_item_restricted import clear_admin_menu_item_restricted_page_cache
+
 
 NOT_FOUND_RESPONSE = "NotFound"
 
@@ -107,7 +108,7 @@ def render_admin_menu_item(request, page):
     filtered = 'filtered' in request.REQUEST
     # caching clearence on ajax update
     if cms_settings.ENABLE_ADMIN_MENU_RESTRICTED_CACHING:
-        clear_admin_menu_item_restricted_page_cache(page_id=page.id, site_id=page.site_id)
+        clear_is_restricted_cache(page_id=page.id, site_id=page.site_id)
     
     context.update(get_admin_menu_item_context(request, page, filtered))
     return render_to_response('admin/cms/page/menu_item.html', context)
@@ -123,6 +124,10 @@ def get_page_children_ids(page_id):
     if page is not None:
         children = page.get_children()
         for child in children:
+            if (child.id is not None) and (child.id not in children_ids):
+                children_ids.append(child.id)
+        descendants = page.get_descendants()
+        for child in descendants:
             if child.id is not None and child.id not in children_ids:
                 children_ids.append(child.id)
     return children_ids

@@ -20,38 +20,31 @@ CMS_ADMIN_RESTRICTED_ITEM_KEY = u"%s:adm_m_is_rest:%s:"
 CMS_ADMIN_MENU_CACHE_RESTRICTED_LANG = u"admr"
 
 
-def get_admin_menu_item_restricted_lex_key(page_id=None):
+def generate_restricted_lex_cache_key(page_id):
     """
-    function to assemble the cache key
+    function to generate the cache key  
     """
     return CMS_ADMIN_RESTRICTED_ITEM_KEY % (settings.CMS_CACHE_PREFIX, page_id)
 
-def get_admin_menu_item_restricted_cache_key(page_id):
-    """
-    function to get the cache key 
-    """
-    return get_admin_menu_item_restricted_lex_key(page_id)
-
-def get_all_admin_menu_item_restricted_cache_keys(site_id=None):
+def get_all_stored_restricted_cache_keys(site_id=None):
     if site_id is None:
         site_id = 1
-    all_restricted_items_cache_keys =[ cache_key for cache_key in CacheKey.objects.filter(language=CMS_ADMIN_MENU_CACHE_RESTRICTED_LANG, site=site_id).values_list('key', flat=True)]
-    return all_restricted_items_cache_keys     
+    return [ cache_key for cache_key in CacheKey.objects.filter(language=CMS_ADMIN_MENU_CACHE_RESTRICTED_LANG, site=site_id).values_list('key', flat=True)]     
 
-def delete_admin_menu_item_restricted_cache_key(key, site_id=None):
+def delete_stored_restricted_cache_key(key, site_id=None):
     if site_id is None:
         site_id = 1
     keys = CacheKey.objects.filter(language=CMS_ADMIN_MENU_CACHE_RESTRICTED_LANG, site=site_id, key=key)
     for old_key in keys:
         old_key.delete()    
 
-def get_admin_menu_item_restricted_cache(page_id, site_id=None):
+def get_cached_is_restricted(page_id, site_id=None):
     """
     Helper for reading values from cache
     """
-    return cache.get(get_admin_menu_item_restricted_cache_key(page_id))
+    return cache.get(generate_restricted_lex_cache_key(page_id))
 
-def set_admin_menu_item_restricted_cache(page_id, value, site_id=None):
+def set_is_restricted_cache(page_id, value, site_id=None):
     """
     Helper method for storing values in cache. Stores used keys so
     all of them can be cleaned when clean_permission_cache gets called.
@@ -60,40 +53,37 @@ def set_admin_menu_item_restricted_cache(page_id, value, site_id=None):
     if site_id is None:
         site_id = 1
     if page_id is not None and value is not None:
-        cache_key = get_admin_menu_item_restricted_cache_key(page_id)
+        cache_key = generate_restricted_lex_cache_key(page_id)
         cache.set(cache_key, value, settings.CMS_CACHE_DURATIONS['permissions'])
         CacheKey.objects.get_or_create(key=cache_key, language=CMS_ADMIN_MENU_CACHE_RESTRICTED_LANG, site=site_id)
 
-def clear_admin_menu_item_restricted_page_cache(page_id=None, site_id=None):
+def clear_is_restricted_cache(page_id=None, site_id=None):
     """
-    Cleans permission cache for given user.
+    Cleans is restricted .
     """
     from cms.utils.admin import get_page_children_ids
-    
-    lookup_key = get_admin_menu_item_restricted_cache_key(page_id)
-    log.debug("clear_admin_menu_item_restricted_page_cache pid %s with key %s" % (page_id, lookup_key))
     keys_to_remove = []
-    allrestricteditems_cache_keys = get_all_admin_menu_item_restricted_cache_keys(site_id)
-    for key in allrestricteditems_cache_keys:
-        if key.startswith(lookup_key):
-            keys_to_remove.append(key)
-            child_ids = get_page_children_ids(page_id)
-            for child_id in child_ids:
-                child_lookup_key = get_admin_menu_item_restricted_cache_key(child_id)
-                if key.startswith(child_lookup_key):
+
+    child_ids = get_page_children_ids(page_id)
+    #children
+    child_keys = [generate_restricted_lex_cache_key(child_id) for child_id in child_ids]
+    # me
+    child_keys.append(generate_restricted_lex_cache_key(page_id))
+    # mark for deletion
+    for key in get_all_stored_restricted_cache_keys(site_id):
+        if key in child_keys:
                     keys_to_remove.append(key)
-    #housekeeping        
+    # delete
     if len(keys_to_remove)>0:
         cache.delete_many(keys_to_remove)
     for del_key in keys_to_remove:
-        delete_admin_menu_item_restricted_cache_key(del_key)
-    
+            delete_stored_restricted_cache_key(del_key,site_id=site_id)
 
 def clear_admin_menu_item_restricted_cache(site_id=None):
     """
     cleanup the cache and the stored cache keys
     """
-    for cached_key in get_all_admin_menu_item_restricted_cache_keys(site_id):
-        log.debug("clear_admin_menu_item_restricted_cache cache %s" %(cached_key))
+    for cached_key in get_all_stored_restricted_cache_keys(site_id):
+        #log.debug("clear_admin_menu_item_restricted_cache cache %s" %(cached_key))
         cache.delete(cached_key)
-        delete_admin_menu_item_restricted_cache_key(cached_key)
+        delete_stored_restricted_cache_key(cached_key)

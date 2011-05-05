@@ -6,6 +6,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import signals
 from django.dispatch import Signal
 
+from cms.cache.admin_menu_item_restricted import clear_is_restricted_cache
 from cms.cache.permissions import (
     clear_user_permission_cache, clear_permission_cache)
 from cms.models import (Page, Title, CMSPlugin, PagePermission, 
@@ -13,8 +14,7 @@ from cms.models import (Page, Title, CMSPlugin, PagePermission,
 
 from menus.menu_pool import menu_pool
 
-#from cms.cache.admin_menu_item import (clear_admin_menu_item_cache,clear_admin_menu_item_user_page_cache)
-from cms.cache.admin_menu_item_restricted import clear_admin_menu_item_restricted_page_cache
+
 # fired after page location is changed - is moved from one node to other
 page_moved = Signal(providing_args=["instance"])
 
@@ -223,50 +223,41 @@ signals.pre_delete.connect(invalidate_menu_cache, sender=Page)
 
 
 def pre_save_user(instance, raw, **kwargs):
-    log.debug("pre_save_user")
     clear_user_permission_cache(instance)
 
 def pre_delete_user(instance, **kwargs):
-    log.debug("pre_delete_user")
     clear_user_permission_cache(instance)
 
 def pre_save_group(instance, raw, **kwargs):
     if instance.pk:
-        log.debug("pre_save_group")
         for user in instance.user_set.all():
             clear_user_permission_cache(user)
 
 def pre_delete_group(instance, **kwargs):
-    log.debug("pre_delete_group")
     for user in instance.user_set.all():
         clear_user_permission_cache(user)
 
 def pre_save_pagepermission(instance, raw, **kwargs):
     if instance.user:
-        log.debug("pre_save_pagepermission")
         clear_user_permission_cache(instance.user)
 
 def pre_delete_pagepermission(instance, **kwargs):
     if instance.user:
-        log.debug("pre_delete_pagepermission")
         clear_user_permission_cache(instance.user)
 
 def pre_save_globalpagepermission(instance, raw, **kwargs):
     if instance.user:
-        log.debug("pre_save_globalpagepermission")
         clear_user_permission_cache(instance.user)
     menu_pool.clear(all=True)
 
 def pre_delete_globalpagepermission(instance, **kwargs):
     if instance.user:
-        log.debug("pre_delete_globalpagepermission")
         clear_user_permission_cache(instance.user)
 
 def pre_save_delete_page(instance, **kwargs):
-    log.debug("pre_save_delete_page clear_permission_cache called ")
     clear_permission_cache()
     if settings.ENABLE_ADMIN_MENU_RESTRICTED_CACHING:    
-        clear_admin_menu_item_restricted_page_cache(instance.id)
+        clear_is_restricted_cache(instance.id)
 
 
 if settings.CMS_PERMISSION:

@@ -6,14 +6,15 @@ from cms.conf import settings as cms_settings
 from cms.models import MASK_PAGE, MASK_CHILDREN, MASK_DESCENDANTS
 from cms.utils.admin import get_admin_menu_item_context
 from cms.utils.permissions import get_any_page_view_permissions
-from cms.cache.admin_menu_item_restricted import (get_admin_menu_item_restricted_cache,
-    set_admin_menu_item_restricted_cache)
+
 
 
 from django import template
 from django.conf import settings
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext, ugettext_lazy as _
+from cms.cache.admin_menu_item_restricted import get_cached_is_restricted,\
+    set_is_restricted_cache
 
 register = template.Library()
 
@@ -85,7 +86,7 @@ def is_restricted(page, request):
     """
     Add caching here as loading time is to slow
     """
-    cached_snippet = get_admin_menu_item_restricted_cache(page.id)
+    cached_snippet = get_cached_is_restricted(page.id, site_id = page.site.id)
     if cached_snippet is not None:
         return cached_snippet
     
@@ -98,7 +99,7 @@ def is_restricted(page, request):
             'icon': icon,
         })
     if snippet is not None:
-        set_admin_menu_item_restricted_cache(page.id,snippet)
+        set_is_restricted_cache(page.id, snippet, site_id = page.site.id)
     return snippet 
  
 
