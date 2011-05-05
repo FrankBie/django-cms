@@ -92,9 +92,17 @@ class MenuPool(object):
             cache_keys = CacheKey.objects.get_keys()
         else:
             cache_keys = CacheKey.objects.get_keys(site_id, language)        
-        to_be_deleted = [obj.key for obj in cache_keys]
+        
+        prefix = getattr(settings, "CMS_CACHE_PREFIX", "menu_cache_")    
+        cache_key_fragment = "%smenu_nodes_" % (prefix) 
+        # Cache key management
+        to_be_deleted = []
+        for obj in cache_keys:
+            if obj.key.startswith(cache_key_fragment):
+                to_be_deleted.append(obj.key)
+                obj.delete()
         cache.delete_many(to_be_deleted)
-        cache_keys.delete()
+        
     
     def register_menu(self, menu):
         from menus.base import Menu
