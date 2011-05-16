@@ -119,8 +119,11 @@ def get_page_children_ids(page_id):
     function to determine all children and descendats of a page
     mainly used for cache invalidation on the admin changelist
     """
-    page = Page.objects.get(id = page_id)
     children_ids = []
+    page = None
+    if page_id is not None:
+        page = Page.objects.get(id = page_id)
+    
     if page is not None:
         children = page.get_children()
         for child in children:
