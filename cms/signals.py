@@ -256,7 +256,7 @@ def pre_delete_globalpagepermission(instance, **kwargs):
 
 def pre_save_delete_page(instance, **kwargs):
     clear_permission_cache()
-    if settings.ENABLE_ADMIN_MENU_RESTRICTED_CACHING:    
+    if settings.ENABLE_ADMIN_MENU_RESTRICTED_CACHING and instance.id:    
         clear_is_restricted_cache(instance.id)
 
 
