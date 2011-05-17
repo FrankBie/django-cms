@@ -120,7 +120,7 @@ def get_page_children_ids(page_id):
     mainly used for cache invalidation on the admin changelist
     """
     children_ids = []
-        page = Page.objects.get(id = page_id)
+    page = Page.objects.get(id = page_id)
     if page is not None:
         children = page.get_children()
         for child in children:
