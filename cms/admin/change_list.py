@@ -89,8 +89,8 @@ class CMSChangeList(ChangeList):
         perm_edit_ids = Page.permissions.get_change_id_list(request.user, site)
         perm_publish_ids = Page.permissions.get_publish_id_list(request.user, site)
         perm_advanced_settings_ids = Page.permissions.get_advanced_settings_id_list(request.user, site)
-        #perm_change_list_ids = Page.permissions.get_change_id_list(request.user, site)
-        perm_change_list_ids = perm_edit_ids
+        perm_change_list_ids = Page.permissions.get_change_id_list(request.user, site)
+        #perm_change_list_ids = perm_edit_ids
         
         if perm_edit_ids and perm_edit_ids != Page.permissions.GRANT_ALL:
             pages = pages.filter(pk__in=perm_edit_ids)
@@ -129,10 +129,12 @@ class CMSChangeList(ChangeList):
         # This is normally a tag filter, but it's really nice in our case too:
         # It caches children for every page in the list we pass it, so no
         # further queries are needed.
-        mptt_tags.cache_tree_children(pages)
+        # tree breaks for some reason
+        #mptt_tags.cache_tree_children(pages)
         
         for page in pages:
-            children = page.get_children()
+            children = []
+            #children = page.get_children()
 
             # note: We are using change_list permission here, because we must
             # display also pages which user must not edit, but he haves a 
@@ -183,15 +185,15 @@ class CMSChangeList(ChangeList):
                 else:
                     page.ancestors_ascending = []
                 page.home_pk_cache = home_pk
-#                if not self.is_filtered():
-#                    find_children(page, pages, 1000, 1000, [], -1, soft_roots=False, request=request, no_extended=True, to_levels=1000)
-#                else:
-#                    page.childrens = []
+                if not self.is_filtered():
+                    find_children(page, pages, 1000, 1000, [], -1, soft_roots=False, request=request, no_extended=True, to_levels=1000)
+                else:
+                    page.childrens = []
             
             # childrens is the reverse accessor for the parent foreign key.
             # We want to set it so the JSTree can display it nicely in admin.
             # "childrens" is the fully cached version of children.
-            page.childrens = children
+#            page.childrens = children
 
             #put the title loadin in the loop
             # get the titles for this item

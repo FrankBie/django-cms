@@ -469,7 +469,9 @@ class Page(MPTTModel):
         # fire signal after publishing is done
         import cms.signals as cms_signals
         cms_signals.post_publish.send(sender=Page, instance=self)
-        transaction.commit()
+# page move on a complex tree breaks if this is on
+# no tin working version
+#        transaction.commit()
         return published
         
     def delete(self):

@@ -484,7 +484,8 @@ class PagePermissionsPermissionManager(models.Manager):
         page_id_allow_list = []
         
         for permission in qs:
-            if getattr(permission, attr):
+            is_allowed = getattr(permission, attr)
+            if is_allowed:
 
                 # can add is special - we are actually adding page under current page
                 if permission.grant_on & MASK_PAGE or attr is "can_add":
